@@ -1,0 +1,6 @@
+# This is only used to simulate D1
+
+[[d1_databases]]
+binding = "CONTEST_DB" # i.e. available in your Worker on env.DB
+database_name = "CONTEST_DB"
+database_id = "fc87e477-cbb2-41ee-825a-6863d148"
