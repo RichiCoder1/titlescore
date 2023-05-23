@@ -4,7 +4,9 @@
     "lib": [
       "DOM",
       "DOM.Iterable",
-      "ESNext"
+      "ESNext",
+      "ES2023",
+      "ESNext.AsyncIterable"
     ],
     "module": "ESNext",
     "skipLibCheck": true,
@@ -24,6 +26,9 @@
     "baseUrl": ".",
     "paths": {
       "~/*": [
+        "src/*"
+      ],
+      "@/*": [
         "src/*"
       ]
     }

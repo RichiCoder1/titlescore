@@ -1,0 +1,15 @@
+diff --git a/dist/chunk-44EOVEQY.mjs b/dist/chunk-44EOVEQY.mjs
+index cbf14700eee667a7be3f7d8f1252afc25a995801..309d9d7640d3a4d1554f7525461f8525c40911cb 100644
+--- a/dist/chunk-44EOVEQY.mjs
++++ b/dist/chunk-44EOVEQY.mjs
+@@ -2,6 +2,10 @@
+ import { constants } from "@clerk/backend";
+ import cookie from "cookie";
+ 
++const process = {
++  env: {}
++};
++
+ // src/shared.ts
+ function isValidProxyUrl(key) {
+   if (!key) {

@@ -1,44 +1,27 @@
-import { useState } from "react";
-import reactLogo from "../assets/react.svg";
-import viteLogo from "/favicon.svg";
-import "./index.css";
-import { trpc } from "../utils/trpc";
-import { rootRoute } from "./root";
-import { Route } from "@tanstack/router";
+import { Link } from "react-router-dom";
 
-export const indexRoute = new Route({
-  getParentRoute: () => rootRoute,
-  path: "/",
-  component: Home
-});
-
-function Home() {
-  const [count, setCount] = useState(0);
-  const helloQuery = trpc.hello.hello.useQuery();
-
+export function Home() {
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="relative isolate px-6 pt-14 lg:px-8">
+      <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+        <div className="text-center">
+          <h1
+            className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl"
+          >
+            TitleScore
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-white">
+            Get started making competition scoring quick, reliable, and seamless.
+            Either enter manually or add your judges to get scores in realtime.
+          </p>
+          <div className="mt-10 flex items-center justify-center gap-x-6">
+            <Link
+              to="/auth/login"
+              className="rounded-md bg-purple-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
+              >Get started</Link>
+          </div>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <pre>{helloQuery.data}</pre>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   );
 }
