@@ -1,13 +1,15 @@
 import type { Config } from "tailwindcss";
+import defaultTheme from "tailwindcss/defaultTheme";
 
 export default {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
+    './src/**/*.tsx',
 	],
   theme: {
+    fontFamily: {
+      sans: ["Inter", ...defaultTheme.fontFamily.sans],
+    },
     container: {
       center: true,
       padding: "2rem",

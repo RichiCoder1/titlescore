@@ -23,7 +23,7 @@ export const onRequest: PagesFunction<CfEnv, any, CfData> = async (context) => {
   if (parsedCookies['__session']) { 
     token = parsedCookies['__session'];
   } else if (context.request.headers.has('Authorization')) {
-    const header = context.request.headers.get('Authorization');
+    const header = context.request.headers.get('Authorization')!;
     const [type, value] = header.split(' ');
     if (type === 'Bearer') {
       token = value;

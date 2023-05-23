@@ -1,16 +1,11 @@
 import { initTRPC } from '@trpc/server';
+import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
-type Context = CfData;
- 
-/**
- * Initialization of tRPC backend
- * Should be done only once per backend!
- */
+type Context = CfData & {
+  db: DrizzleD1Database;
+};
+
 const t = initTRPC.context<Context>().create();
- 
-/**
- * Export reusable router and procedure helpers
- * that can be used throughout the router
- */
+
 export const router = t.router;
 export const publicProcedure = t.procedure;

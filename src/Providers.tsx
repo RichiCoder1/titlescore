@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { httpBatchLink } from '@trpc/client';
 import { trpc } from './utils/trpc';
 import { useState } from 'react';
+import { HelmetProvider } from 'react-helmet-async';
 
 if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
     throw new Error('Missing Publishable Key');
@@ -10,14 +11,16 @@ if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!import.meta.env.VITE_API_URL) {
-  throw new Error('Missing API URL');
+    throw new Error('Missing API URL');
 }
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <ClerkProvider publishableKey={clerkPublishableKey}>
-            <ClientProvider>{children}</ClientProvider>
+            <HelmetProvider>
+                <ClientProvider>{children}</ClientProvider>
+            </HelmetProvider>
         </ClerkProvider>
     );
 }

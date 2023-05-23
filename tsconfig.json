@@ -21,7 +21,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     /** Short Paths */
-    "baseUrl": "./",
+    "baseUrl": ".",
     "paths": {
       "~/*": [
         "src/*"
@@ -29,14 +29,11 @@
     }
   },
   "include": [
-    "src"
+    "src", "functions"
   ],
   "references": [
     {
       "path": "./tsconfig.node.json"
-    },
-    {
-      "path": "./tsconfig.workers.json"
     }
   ]
 }

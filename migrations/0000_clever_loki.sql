@@ -1,3 +1,5 @@
+-- Migration number: 0000 	 2023-05-22T23:24:59.005Z
+
 CREATE TABLE `contests` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`name` text NOT NULL,

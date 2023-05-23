@@ -1,0 +1,46 @@
+import { Link, Outlet, RootRoute } from '@tanstack/router';
+import { TanStackRouterDevtools } from '@tanstack/router-devtools';
+
+export const rootRoute = new RootRoute({
+    component: () => {
+        return (
+            <>
+                <div className={`min-h-screen flex flex-col`}>
+                    <div className={`flex items-center border-b gap-2`}>
+                        <h1 className={`text-3xl p-2`}>Kitchen Sink</h1>
+                    </div>
+                    <div className={`flex-1 flex`}>
+                        <div className={`divide-y w-56`}>
+                            {([['.', 'Home']] as const).map(([to, label]) => {
+                                return (
+                                    <div key={to}>
+                                        <Link
+                                            to={to}
+                                            activeOptions={
+                                                {
+                                                    // If the route points to the root of it's parent,
+                                                    // make sure it's only active if it's exact
+                                                    // exact: to === '.',
+                                                }
+                                            }
+                                            className={`block py-2 px-3 text-blue-700`}
+                                            // Make "active" links bold
+                                            activeProps={{ className: `font-bold` }}
+                                        >
+                                            {label}
+                                        </Link>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className={`flex-1 border-l border-gray-200`}>
+                            {/* Render our first route match */}
+                            <Outlet />
+                        </div>
+                    </div>
+                </div>
+                <TanStackRouterDevtools position="bottom-right" />
+            </>
+        );
+    },
+});

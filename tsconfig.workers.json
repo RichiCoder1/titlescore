@@ -6,6 +6,7 @@
     "moduleResolution": "bundler",
     "lib": ["esnext"],
     "types": ["@cloudflare/workers-types"],
+    "isolatedModules": true,
 
     /** Short Paths */
     "baseUrl": ".",
