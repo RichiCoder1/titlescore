@@ -5,4 +5,5 @@ import Unfonts from 'unplugin-fonts/vite';
 
 export default defineConfig({
     plugins: [configToAlias(), react(), Unfonts({ fontsource: { families: ['Inter'] } })],
+    envPrefix: ['VITE_', 'CF_'],
 });

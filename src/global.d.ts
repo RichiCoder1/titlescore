@@ -2,6 +2,8 @@
 
 interface ImportMetaEnv {
     readonly VITE_CLERK_PUBLISHABLE_KEY: string;
+    readonly CF_PAGES?: string;
+    readonly CF_PAGES_URL?: string;
 }
 
 interface ImportMeta {

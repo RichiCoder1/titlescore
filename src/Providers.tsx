@@ -10,11 +10,6 @@ if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
 }
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-if (!import.meta.env.VITE_API_URL) {
-    throw new Error('Missing API URL');
-}
-const apiUrl = import.meta.env.VITE_API_URL;
-
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <ClerkProvider publishableKey={clerkPublishableKey}>
@@ -32,7 +27,7 @@ const ClientProvider = ({ children }: { children: React.ReactNode }) => {
         trpc.createClient({
             links: [
                 httpBatchLink({
-                    url: apiUrl,
+                    url: new URL('/api/trpc', import.meta.url).toString(),
                     // You can pass any HTTP headers you wish here
                     async headers() {
                         return {
