@@ -11,6 +11,9 @@ const datetime = customType<{ data: Date; driverData: string }>({
   dataType() {
     return "TEXT";
   },
+  toDriver(value: Date): string {
+    return value.toISOString();
+  },
   fromDriver(value: string): Date {
     return new Date(value);
   },
@@ -68,10 +71,12 @@ export const scores = sqliteTable(
     contestId: integer("contest_id")
       .notNull()
       .references(() => contests.id),
-    contestantId: integer("contestant_id").notNull(),
+    contestantId: integer("contestant_id")
+      .notNull()
+      .references(() => contestants.id),
     criteriaId: integer("criteria_id")
       .notNull()
-      .references(() => criteria.contestId),
+      .references(() => criteria.id),
     score: integer("score").notNull().default(0),
     comment: text("comment").notNull().default(""),
     createdAt: datetime("created_at")

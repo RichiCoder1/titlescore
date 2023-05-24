@@ -49,7 +49,6 @@ export class NdJsonStream extends TransformStream<BufferSource, unknown> {
         }
       },
       flush: (controller) => {
-        console.log("flush", this.last)
         this.last += this.decoder.decode();
         if (this.last) {
           try {

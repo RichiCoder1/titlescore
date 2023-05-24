@@ -5,6 +5,7 @@ import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { Context } from "./context";
 import { checkPermission } from "./helpers/authz";
+import { checkContest } from "./helpers/contest";
 
 export type ErrorShape = DefaultErrorShape & {
   trpcCode: TRPC_ERROR_CODE_KEY;
@@ -87,19 +88,25 @@ export const protectedProcedure = t.procedure.use((opts) => {
     Promise.resolve();
 
   if (meta?.check) {
-    const { authClient } = ctx;
+    const { authClient, db } = ctx;
     const { resourceType, permission } = meta.check;
 
     const userId = ctx.user.id;
 
     authorize = async (id: string | number) => {
       try {
+        // If this is a contest procedure, check the contest first.
+        if (!resourceType || resourceType === "contest") {
+          await checkContest(Number(id), db);
+        }
+
         const result = await checkPermission(authClient, {
           resourceId: id,
           resourceType: resourceType ?? "contest",
           permission,
           userId,
         });
+
         if (result.permissionship !== true) {
           throw new TRPCError({
             code: "FORBIDDEN",
@@ -108,6 +115,7 @@ export const protectedProcedure = t.procedure.use((opts) => {
         }
       } catch (e) {
         console.error("trpc.authorize", { e });
+        if (e instanceof TRPCError) throw e;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to check permissions:\n\n" + (e as Error)?.message,

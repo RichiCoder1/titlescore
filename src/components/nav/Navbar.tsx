@@ -1,17 +1,33 @@
-import { NavLink } from "react-router-dom";
-import { Disclosure } from "@headlessui/react";
+import { NavLink, useNavigation } from "react-router-dom";
+import { Disclosure, Transition } from "@headlessui/react";
 import { XIcon, MenuIcon } from "lucide-react";
 import {
   SignedIn,
   SignedOut,
   SignInButton,
+  useAuth,
   UserButton,
 } from "@clerk/clerk-react";
 import { cn } from "~/utils/styles";
+import { useEffect, useState } from "react";
+import { ContestCombobox } from "./ContestCombobox";
+import { ScaleLoader } from "react-spinners";
+import { useIsFetching } from "@tanstack/react-query";
 
-const navigation = [{ name: "Dashboard", href: "/" }];
+type Link = { name: string; to: string };
 
 export default function Navbar() {
+  const { isSignedIn } = useAuth();
+  const { state } = useNavigation();
+  const isQueryLoading = useIsFetching();
+
+  const [navigationLinks, setNavigationLinks] = useState<Link[]>([]);
+  useEffect(() => {
+    setNavigationLinks(isSignedIn ? [{ name: "Dashboard", to: "/app" }] : []);
+  }, [isSignedIn]);
+
+  const isLoading = state === "loading" || isQueryLoading > 0;
+
   return (
     <Disclosure as="nav" className="bg-gray-800">
       {({ open }) => (
@@ -20,18 +36,23 @@ export default function Navbar() {
             <div className="flex h-16 items-center justify-between">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <img
-                    className="h-8 w-8"
-                    src="/favicon.svg"
-                    alt="TitleScore"
-                  />
-                </div>
+                  <NavLink to={isSignedIn ? "/app" : "/"}>
+                    <img
+                      className="h-8 w-8"
+                      src="/favicon.svg"
+                      alt="TitleScore"
+                    />
+                  </NavLink>
+                </div>{" "}
                 <div className="hidden md:block">
                   <div className="ml-10 flex items-baseline space-x-4">
-                    {navigation.map((item) => (
+                    <SignedIn>
+                      <ContestCombobox />
+                    </SignedIn>
+                    {navigationLinks.map((item) => (
                       <NavLink
                         key={item.name}
-                        to={item.href}
+                        to={item.to}
                         className={({ isActive }) =>
                           cn(
                             isActive
@@ -48,7 +69,22 @@ export default function Navbar() {
                 </div>
               </div>
               <div className="flex-1">
-                <div className="mr-6 md:mr-0 flex justify-end md:items-center md:ml-6">
+                <div className="mr-6 md:mr-0 flex justify-end items-center md:ml-6">
+                  <Transition
+                    show={isLoading}
+                    enter="transition-opacity duration-150"
+                    enterFrom="opacity-0"
+                    enterTo="opacity-100"
+                    leave="transition-opacity duration-150"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                  >
+                    <ScaleLoader
+                      className="mr-4"
+                      loading={true}
+                      color="hsl(var(--primary))"
+                    />
+                  </Transition>
                   <SignedIn>
                     <UserButton />
                   </SignedIn>
@@ -73,11 +109,11 @@ export default function Navbar() {
 
           <Disclosure.Panel className="md:hidden">
             <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
-              {navigation.map((item) => (
+              {navigationLinks.map((item) => (
                 <Disclosure.Button
                   key={item.name}
                   as={NavLink}
-                  to={item.href}
+                  to={item.to}
                   className={({ isActive }: { isActive: boolean }) =>
                     cn(
                       isActive

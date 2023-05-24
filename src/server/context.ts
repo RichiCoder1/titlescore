@@ -2,7 +2,6 @@ import { inferAsyncReturnType } from "@trpc/server";
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { drizzle } from "drizzle-orm/d1";
 import ky from 'ky';
-import createClerkClient from '@clerk/clerk-sdk-node/esm/instance';
 import * as schema from "./schema";
 
 export const createContext =
@@ -15,8 +14,9 @@ export const createContext =
     const authClient = ky.extend({
       prefixUrl: `https://gateway-alpha.authzed.com`,
       headers: {
-        Authorization: `apiKey ${cfCtx.env.AUTHZED_API_KEY}`
-      }
+        Authorization: `Bearer ${cfCtx.env.AUTHZED_API_KEY}`
+      },
+      credentials: undefined,
     });
 
     return {
@@ -26,14 +26,11 @@ export const createContext =
         claims: cfCtx.data.user,
       },
       db: drizzle(cfCtx.env.CONTEST_DB, {
-        schema
+        schema,
+        logger: true,
       }),
       authClient,
-      clerk: createClerkClient({
-        publishableKey: cfCtx.env.CLERK_PUBLISHABLE_KEY,
-        secretKey: cfCtx.env.CLERK_SECRET_KEY,
-        jwtKey: cfCtx.env.CLERK_JWT_PUBLIC_KEY,
-      }),
+      clerk: cfCtx.data.clerk,
       baseUrl,
       env: cfCtx.env,
     };

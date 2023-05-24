@@ -1,8 +1,11 @@
 import { useToaster } from "react-hot-toast/headless";
 import { Toast, ToastClose, ToastDescription, ToastProvider, ToastViewport } from "./ui/Toast";
+import { useEffect } from "react";
 
 export const Notifications = () => {
   const { toasts, handlers } = useToaster();
+
+  useEffect(() => console.info({ toasts }), [toasts]);
 
   return (
     <ToastProvider>

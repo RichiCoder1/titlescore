@@ -1,10 +1,12 @@
 
 import { useUser, useSignIn, RedirectToSignIn } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
-import { Navigate, useParams, useResolvedPath } from "react-router-dom";
+import { Navigate, useResolvedPath, useSearchParams } from "react-router-dom";
 
 export const VerifyPage = () => {
-  const { token, redirectTo = '/' } = useParams();
+  const [params] = useSearchParams();
+  const token = params.get('token');
+  const redirectTo = params.get('redirectTo') ?? '/';
   const { signIn, setSession } = useSignIn();
   const { user } = useUser();
   const toPath = useResolvedPath(redirectTo);

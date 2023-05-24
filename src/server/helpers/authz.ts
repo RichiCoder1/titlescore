@@ -5,20 +5,22 @@ import { NdJsonStream } from "~/utils/ndjsonstream";
 export const NAMESPACE = "titlescore";
 export type ContestRelationship = "owner" | "judge" | "organizer";
 
-const Permissionship = z.enum([
-  "PERMISSIONSHIP_UNSPECIFIED",
-  "PERMISSIONSHIP_NO_PERMISSION",
-  "PERMISSIONSHIP_HAS_PERMISSION",
-]).transform((val) => {
-  switch (val) {
-    case "PERMISSIONSHIP_NO_PERMISSION":
-      return false;
-    case "PERMISSIONSHIP_HAS_PERMISSION":
-      return true;
-    default:
-      return null
-  }
-});
+const Permissionship = z
+  .enum([
+    "PERMISSIONSHIP_UNSPECIFIED",
+    "PERMISSIONSHIP_NO_PERMISSION",
+    "PERMISSIONSHIP_HAS_PERMISSION",
+  ])
+  .transform((val) => {
+    switch (val) {
+      case "PERMISSIONSHIP_NO_PERMISSION":
+        return false;
+      case "PERMISSIONSHIP_HAS_PERMISSION":
+        return true;
+      default:
+        return null;
+    }
+  });
 
 const writtenAtSchema = z.object({
   writtenAt: z.object({
@@ -87,10 +89,10 @@ export type Relationship = {
 export const checkPermission = async (
   client: AuthzClient,
   opts: {
-    resourceId: number | string,
-    resourceType: string,
-    userId: string,
-    permission: string
+    resourceId: number | string;
+    resourceType: string;
+    userId: string;
+    permission: string;
   }
 ) => {
   const request = {
@@ -107,13 +109,11 @@ export const checkPermission = async (
     permission: opts.permission,
     // TODO: Us Tokens?
     consistency: {
-      requirement: {
-        fullyConsistent: true,
-      },
+      fullyConsistent: true,
     },
   };
 
-  const response = await client.post("/v1/permissions/check", {
+  const response = await client.post("v1/permissions/check", {
     json: request,
   });
 
@@ -131,20 +131,22 @@ export const addContestMembers = async (
       relationship: {
         resource: {
           objectType: `${NAMESPACE}/contest`,
-          objectId: contestId,
+          objectId: `${contestId}`,
         },
-      },
-      relation,
-      subject: {
-        object: {
-          objectType: `${NAMESPACE}/user`,
-          objectId: userId,
+        relation,
+        subject: {
+          object: {
+            objectType: `${NAMESPACE}/user`,
+            objectId: userId,
+          },
         },
       },
     })),
   };
 
-  const response = await client.post("/v1/relationships/write", {
+  console.log(JSON.stringify(request))
+
+  const response = await client.post("v1/relationships/write", {
     json: request,
   });
   return writtenAtSchema.parse(await response.json());
@@ -161,20 +163,20 @@ export const removeContestMembers = async (
       relationship: {
         resource: {
           objectType: `${NAMESPACE}/contest`,
-          objectId: contestId,
+          objectId: `${contestId}`,
         },
-      },
-      relation,
-      subject: {
-        object: {
-          objectType: `${NAMESPACE}/user`,
-          objectId: userId,
+        relation,
+        subject: {
+          object: {
+            objectType: `${NAMESPACE}/user`,
+            objectId: userId,
+          },
         },
       },
     })),
   };
 
-  const response = await client.post("/v1/relationships/write", {
+  const response = await client.post("v1/relationships/write", {
     json: request,
   });
   return writtenAtSchema.parse(await response.json());
@@ -193,13 +195,11 @@ export const getContestMembers = async (
       },
     },
     consistency: {
-      requirement: {
-        fullyConsistent: true,
-      },
+      fullyConsistent: true,
     },
   };
 
-  const response = await client.post("/v1/relationships/read", {
+  const response = await client.post("v1/relationships/read", {
     json: request,
   });
 
@@ -240,13 +240,11 @@ export const getContestIdsByUser = async (
       },
     },
     consistency: {
-      requirement: {
-        fullyConsistent: true,
-      },
+      fullyConsistent: true,
     },
   };
 
-  const response = await client.post("/v1/relationships/read", {
+  const response = await client.post("v1/relationships/read", {
     json: request,
   });
 
@@ -264,7 +262,7 @@ export const getContestIdsByUser = async (
     const relationship = parsed.result.relationship;
     contests.push(relationship.resource.objectId);
   }
-  return contests.map(id => parseInt(id, 10));
+  return contests.map((id) => parseInt(id, 10));
 };
 
 export const getRelation = async (
@@ -282,13 +280,11 @@ export const getRelation = async (
       },
     },
     consistency: {
-      requirement: {
-        fullyConsistent: true,
-      },
+      fullyConsistent: true,
     },
   };
 
-  const response = await client.post("/v1/relationships/read", {
+  const response = await client.post("v1/relationships/read", {
     json: request,
   });
 
