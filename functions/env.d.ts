@@ -15,7 +15,7 @@ interface CfEnv {
 interface CfData extends Record<string, unknown> {
   token?: string;
   user?: Awaited<ReturnType<typeof import('@clerk/backend').verifyToken>>;
-  clerk?: ReturnType<typeof import('@clerk/clerk-sdk-node/esm/instance')>;
+  clerk?: ReturnType<typeof import('@clerk/clerk-sdk-node/esm/instance').default>;
 }
 
 type CfCtx<T extends string = any> = EventContext<CfEnv, T, CfData>;

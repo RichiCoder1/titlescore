@@ -3,7 +3,10 @@ import { AuthzClient } from "../context";
 import { NdJsonStream } from "~/utils/ndjsonstream";
 
 export const NAMESPACE = "titlescore";
-export type ContestRelationship = "owner" | "judge" | "organizer";
+
+export const roleSchema = z.enum(["judge", "owner", "organizer"]);
+
+export type ContestRelationship = z.infer<typeof roleSchema>;
 
 const Permissionship = z
   .enum([
@@ -144,7 +147,7 @@ export const addContestMembers = async (
     })),
   };
 
-  console.log(JSON.stringify(request))
+  console.log(JSON.stringify(request));
 
   const response = await client.post("v1/relationships/write", {
     json: request,
@@ -180,6 +183,22 @@ export const removeContestMembers = async (
     json: request,
   });
   return writtenAtSchema.parse(await response.json());
+};
+
+export const updateMemberRole = async (
+  client: AuthzClient,
+  contestId: number,
+  userId: string,
+  relation: ContestRelationship
+) => {
+  await removeContestMembers(client, contestId, [{
+    userId,
+    relation: undefined as any,
+  }]);
+  await addContestMembers(client, contestId, [{
+    userId,
+    relation,
+  }]);
 };
 
 export const getContestMembers = async (

@@ -25,17 +25,12 @@ import { PuffLoader } from "react-spinners";
 import { CreateCriteriaDialog } from "~/components/criteria/CreateCriteriaDialog";
 import { useState } from "react";
 import { Button } from "~/components/ui/Button";
-import { MoreVerticalIcon, PlusCircle } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { cn } from "~/utils/styles";
 import { DialogTrigger } from "~/components/ui/Dialog";
 import { UpdateCriteriaDialog } from "~/components/criteria/UpdateCriteriaDialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/ui/DropdownMenu";
 import toast from "react-hot-toast/headless";
+import { ItemActions } from "~/components/ui/tableParts/ItemActions";
 
 export const columns: ColumnDef<Criteria>[] = [
   {
@@ -43,12 +38,12 @@ export const columns: ColumnDef<Criteria>[] = [
     header: "Name",
   },
   {
-    accessorKey: "description",
-    header: "Description",
-  },
-  {
     accessorKey: "weight",
     header: "Weight",
+  },
+  {
+    accessorKey: "description",
+    header: "Description",
   },
 ];
 
@@ -131,35 +126,11 @@ export function Criteria({ contestId }: { contestId: number }) {
                         onOpenChange={row.toggleExpanded}
                         criteria={row.original}
                       >
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="px-2">
-                              <span className="sr-only">Open options</span>
-                              <MoreVerticalIcon
-                                className="h-5 w-5"
-                                aria-hidden="true"
-                              />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DialogTrigger asChild>
-                              <DropdownMenuItem
-                                disabled={isLoading}
-                                className="cursor-pointer"
-                                onClick={() => row.toggleExpanded()}
-                              >
-                                Edit
-                              </DropdownMenuItem>
-                            </DialogTrigger>
-
-                            <DropdownMenuItem
-                              disabled={isLoading}
-                              onClick={() => mutate({ id: row.original.id })}
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <ItemActions
+                          onEditClick={() => row.toggleExpanded()}
+                          onDeleteClick={() => mutate({ id: row.original.id })}
+                          disabled={isLoading}
+                        />
                       </UpdateCriteriaDialog>
                     </TableCell>
                   </TableRow>

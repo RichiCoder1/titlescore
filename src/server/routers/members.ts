@@ -7,18 +7,18 @@ import {
   getContestMembers,
   getRelation,
   removeContestMembers,
+  updateMemberRole,
 } from "../helpers/authz";
-import { inviteMemberSchema } from "~/shared/schemas/members";
-import ky from "ky";
+import { addMemberSchema, updateMemberSchema } from "~/shared/schemas/members";
 import { contests } from "../schema";
 import { eq } from "drizzle-orm";
 
 export const membersRouter = router({
   invite: protectedProcedure
-    .input(inviteMemberSchema)
+    .input(addMemberSchema)
     .meta({ check: { permission: "manage" } })
     .mutation(async ({ input, ctx }) => {
-      const { authClient, db, authorize, clerk } = ctx;
+      const { authClient, db, authorize, clerk, sendgrid } = ctx;
 
       await authorize(input.contestId);
 
@@ -48,9 +48,9 @@ export const membersRouter = router({
         expiresInSeconds: 60 * 60 * 3,
       });
 
-      const verifyLink = new URL(`${ctx.baseUrl}/app/verify`);
+      const verifyLink = new URL(`${ctx.baseUrl}/auth/verify`);
       verifyLink.searchParams.set("token", token.token);
-      verifyLink.searchParams.set("redirectTo", `${ctx.baseUrl}/app/contests/${input.contestId}`);
+      verifyLink.searchParams.set("redirectTo", `/app/${input.contestId}`);
 
       await addContestMembers(authClient, input.contestId, [
         {
@@ -59,30 +59,33 @@ export const membersRouter = router({
         },
       ]);
 
-      await ky.post('https://api.sendgrid.com/v3/mail/send', {
-        headers: {
-          "Authorization": `Bearer ${ctx.env.SENDGRID_API_KEY}`,
-        },
+      await sendgrid.post("v3/mail/send", {
         json: {
           personalizations: [
-            { to: [{ email: input.email }] }
+            {
+              to: [
+                {
+                  email: input.email,
+                },
+              ],
+              dynamic_template_data: {
+                contestId: input.contestId,
+                contestName: contest!.name,
+                role: input.role,
+                appUrl: verifyLink.toString(),
+              },
+            },
           ],
           from: { email: "no-reply@titlescore.app" },
           template_id: ctx.env.SENDGRID_INVITE_TEMPLATE_ID,
-          dynamic_template_data: {
-            contestId: input.contestId,
-            contestName: contest!.name,
-            role: input.role,
-            appUrl: verifyLink.toString(),
-          }
-        }
+        },
       });
     }),
   resendInvite: protectedProcedure
-    .input(inviteMemberSchema)
+    .input(addMemberSchema)
     .meta({ check: { permission: "manage" } })
     .mutation(async ({ input, ctx }) => {
-      const { db, authorize, clerk, authClient } = ctx;
+      const { db, authorize, clerk, sendgrid } = ctx;
 
       await authorize(input.contestId);
 
@@ -94,14 +97,7 @@ export const membersRouter = router({
         emailAddress: [input.email],
       });
 
-      const targetUser = matchingUsers.shift();
-      if (!targetUser) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "No user with that email found."
-        });
-      }
-
+      const targetUser = matchingUsers[0]!;
       const userId = targetUser.id;
 
       const token = await clerk.signInTokens.createSignInToken({
@@ -109,35 +105,46 @@ export const membersRouter = router({
         expiresInSeconds: 60 * 60 * 3,
       });
 
-      const verifyLink = new URL(`${ctx.baseUrl}/app/verify`);
+      const verifyLink = new URL(`${ctx.baseUrl}/auth/verify`);
       verifyLink.searchParams.set("token", token.token);
-      verifyLink.searchParams.set("redirectTo", `${ctx.baseUrl}/app/contests/${input.contestId}`);
+      verifyLink.searchParams.set("redirectTo", `/app/${input.contestId}`);
 
-      await addContestMembers(authClient, input.contestId, [
-        {
-          userId,
-          relation: input.role,
-        },
-      ]);
-
-      await ky.post('https://api.sendgrid.com/v3/mail/send', {
-        headers: {
-          "Authorization": `Bearer ${ctx.env.SENDGRID_API_KEY}`,
-        },
+      await sendgrid.post("v3/mail/send", {
         json: {
           personalizations: [
-            { to: [{ email: input.email }] }
+            {
+              to: [
+                {
+                  email: input.email,
+                },
+              ],
+              dynamic_template_data: {
+                contestId: input.contestId,
+                contestName: contest!.name,
+                role: input.role,
+                appUrl: verifyLink.toString(),
+              },
+            },
           ],
           from: { email: "no-reply@titlescore.app" },
           template_id: ctx.env.SENDGRID_INVITE_TEMPLATE_ID,
-          dynamic_template_data: {
-            contestId: input.contestId,
-            contestName: contest!.name,
-            role: input.role,
-            appUrl: verifyLink.toString(),
-          }
-        }
+        },
       });
+    }),
+  update: protectedProcedure
+    .input(updateMemberSchema)
+    .meta({ check: { permission: "manage" } })
+    .mutation(async ({ input, ctx }) => {
+      const { authClient, authorize } = ctx;
+
+      await authorize(input.contestId);
+
+      await updateMemberRole(
+        authClient,
+        input.contestId,
+        input.userId,
+        input.role
+      );
     }),
   listByContestId: protectedProcedure
     .input(z.object({ contestId: z.number() }))
@@ -156,8 +163,10 @@ export const membersRouter = router({
 
       return membersResult.map((user) => ({
         userId: user.id,
-        email: user.emailAddresses.find(email => email.id == user.primaryEmailAddressId)?.emailAddress,
-        role: result.find((member) => member.userId === user.id)?.relation,
+        email: user.emailAddresses.find(
+          (email) => email.id == user.primaryEmailAddressId
+        )?.emailAddress!,
+        role: result.find((member) => member.userId === user.id)?.relation!,
       }));
     }),
   delete: protectedProcedure
@@ -176,11 +185,7 @@ export const membersRouter = router({
 
       await authorize(input.contestId);
 
-      const role = await getRelation(
-        authClient,
-        input.userId,
-        input.contestId
-      );
+      const role = await getRelation(authClient, input.userId, input.contestId);
 
       await removeContestMembers(authClient, input.contestId, [
         { userId: input.userId, relation: role! },

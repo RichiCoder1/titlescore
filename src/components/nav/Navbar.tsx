@@ -86,7 +86,7 @@ export default function Navbar() {
                     />
                   </Transition>
                   <SignedIn>
-                    <UserButton />
+                    <UserButton afterSignOutUrl="/" />
                   </SignedIn>
                   <SignedOut>
                     <SignInButton />

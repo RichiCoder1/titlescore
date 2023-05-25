@@ -1,16 +1,17 @@
-
 import { useUser, useSignIn, RedirectToSignIn } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
 import { Navigate, useResolvedPath, useSearchParams } from "react-router-dom";
 
 export const VerifyPage = () => {
   const [params] = useSearchParams();
-  const token = params.get('token');
-  const redirectTo = params.get('redirectTo') ?? '/';
+  const token = params.get("token");
+  const redirectTo = params.get("redirectTo") ?? "/";
   const { signIn, setSession } = useSignIn();
   const { user } = useUser();
   const toPath = useResolvedPath(redirectTo);
   const [signInProcessed, setSignInProcessed] = useState<boolean>(false);
+
+  console.log({ user, token, redirectTo });
 
   useEffect(() => {
     if (!signIn || !setSession || !token) {
@@ -24,10 +25,11 @@ export const VerifyPage = () => {
           ticket: token,
         });
 
-        setSession(res.createdSessionId, () => {
+        await setSession(res.createdSessionId, () => {
           setSignInProcessed(true);
         });
       } catch (err) {
+        console.error(err);
         setSignInProcessed(true);
       }
     };

@@ -2,13 +2,16 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "../trpc";
-import { createContestantSchema } from "~/shared/schemas/contestants";
+import {
+  insertContestantsSchema,
+  updateContestantsSchema,
+} from "~/shared/schemas/contestants";
 import { contestants } from "../schema";
 import { eq } from "drizzle-orm";
 
 export const contestantsRouter = router({
   create: protectedProcedure
-    .input(createContestantSchema)
+    .input(insertContestantsSchema)
     .meta({ check: { permission: "manage" } })
     .mutation(async ({ input, ctx }) => {
       const { db, authorize } = ctx;
@@ -45,6 +48,28 @@ export const contestantsRouter = router({
       }
 
       await authorize(result.contestId);
+      return result;
+    }),
+  update: protectedProcedure
+    .input(updateContestantsSchema)
+    .meta({
+      check: { permission: "manage" },
+    })
+    .mutation(async ({ input, ctx }) => {
+      const { db, authorize } = ctx;
+
+      await authorize(input.contestId);
+
+      const result = await db
+        .update(contestants)
+        .set({
+          name: input.name,
+          stageName: input.stageName ?? input.name,
+        })
+        .where(eq(contestants.id, input.id!))
+        .returning()
+        .get();
+
       return result;
     }),
   listByContestId: protectedProcedure

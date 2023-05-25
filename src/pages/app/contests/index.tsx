@@ -36,8 +36,8 @@ export function ContestsIndexPage() {
       <Separator className="my-4" />
       <div className="mt-4 flex flex-col gap-4">
         <Criteria contestId={contestId} />
-        <Contestants />
-        <Members />
+        <Contestants contestId={contestId} />
+        <Members contestId={contestId} />
       </div>
     </div>
   );
