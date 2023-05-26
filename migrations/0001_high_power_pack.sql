@@ -1,0 +1,1 @@
+ALTER TABLE "contests" ADD COLUMN "timezone" text DEFAULT 'UTC' NOT NULL;

@@ -31,8 +31,9 @@ import { DialogTrigger } from "~/components/ui/Dialog";
 import { UpdateCriteriaDialog } from "~/components/criteria/UpdateCriteriaDialog";
 import toast from "react-hot-toast/headless";
 import { ItemActions } from "~/components/ui/tableParts/ItemActions";
+import { useRole } from "~/utils/auth";
 
-export const columns: ColumnDef<Criteria>[] = [
+const columns: ColumnDef<Criteria>[] = [
   {
     accessorKey: "name",
     header: "Name",
@@ -47,7 +48,9 @@ export const columns: ColumnDef<Criteria>[] = [
   },
 ];
 
-export function Criteria({ contestId }: { contestId: number }) {
+export function Criteria({ contestId }: { contestId: string }) {
+  const { canManage } = useRole({ contestId });
+
   const utils = trpc.useContext();
   const { data, isLoading } = trpc.criteria.listByContestId.useQuery({
     contestId,
@@ -62,6 +65,7 @@ export function Criteria({ contestId }: { contestId: number }) {
       toast.error(`Failed to delete contest:\n\n${e}`);
     },
   });
+
   const table = useReactTable({
     data: data ?? [],
     columns,
@@ -96,6 +100,7 @@ export function Criteria({ contestId }: { contestId: number }) {
                       </TableHead>
                     );
                   })}
+                  {canManage ? <TableHead key="actions"></TableHead> : null}
                 </TableRow>
               ))}
             </TableHeader>
@@ -120,22 +125,26 @@ export function Criteria({ contestId }: { contestId: number }) {
                         )}
                       </TableCell>
                     ))}
-                    <TableCell>
-                      <UpdateCriteriaDialog
-                        open={row.getIsExpanded()}
-                        onOpenChange={row.toggleExpanded}
-                        criteria={row.original}
-                      >
-                        <ItemActions
-                          onEditClick={() => row.toggleExpanded()}
-                          onDeleteClick={() => mutate({ id: row.original.id })}
-                          disabled={isLoading}
-                        />
-                      </UpdateCriteriaDialog>
-                    </TableCell>
+                    {canManage ? (
+                      <TableCell className="w-1">
+                        <UpdateCriteriaDialog
+                          open={row.getIsExpanded()}
+                          onOpenChange={row.toggleExpanded}
+                          criteria={row.original}
+                        >
+                          <ItemActions
+                            onEditClick={() => row.toggleExpanded()}
+                            onDeleteClick={() =>
+                              mutate({ id: row.original.id })
+                            }
+                            disabled={isLoading}
+                          />
+                        </UpdateCriteriaDialog>
+                      </TableCell>
+                    ) : null}
                   </TableRow>
                 ))
-              ) : (
+              ) : !isLoading ? (
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
@@ -144,7 +153,7 @@ export function Criteria({ contestId }: { contestId: number }) {
                     No results.
                   </TableCell>
                 </TableRow>
-              )}
+              ) : null}
             </TableBody>
           </Table>
         </CardContent>
@@ -152,6 +161,7 @@ export function Criteria({ contestId }: { contestId: number }) {
           className={cn("flex", {
             "justify-center": isLoading,
             "justify-end": !isLoading,
+            hidden: !canManage,
           })}
         >
           {isLoading ? (

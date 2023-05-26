@@ -44,17 +44,13 @@ export function ContestTable({ contests }: ContestTableProps) {
               </p>
               <p className="mt-1 flex text-xs leading-5 text-gray-500 max-w-fit">
                 <span className="relative truncate">
-                  {format(contest.startsAt, "PPP")} -{" "}
-                  {format(contest.endsAt, "PPP")}
+                  {contest.startsAt} - {contest.endsAt}
                 </span>
               </p>
             </div>
           </div>
           <div className="flex flex-none items-center gap-x-4">
-            <Button
-              variant="link"
-              className="bg-prim px-4 py-2 text-base"
-            >
+            <Button variant="link" className="bg-prim px-4 py-2 text-base">
               <NavLink to={`/app/${contest.id}`}>
                 View contest<span className="sr-only">, {contest.name}</span>
               </NavLink>
@@ -67,10 +63,17 @@ export function ContestTable({ contests }: ContestTableProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem disabled={isLoading} asChild className="cursor-pointer">
+                <DropdownMenuItem
+                  disabled={isLoading}
+                  asChild
+                  className="cursor-pointer"
+                >
                   <NavLink to={`/app/${contest.id}`}>View</NavLink>
                 </DropdownMenuItem>
-                <DropdownMenuItem disabled={isLoading} onClick={() => mutate({ id: contest.id })}>
+                <DropdownMenuItem
+                  disabled={isLoading}
+                  onClick={() => mutate({ id: contest.id })}
+                >
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>

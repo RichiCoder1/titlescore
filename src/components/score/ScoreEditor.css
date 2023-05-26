@@ -1,0 +1,8 @@
+.cm-theme {
+  & .cm-editor {
+    @apply bg-transparent rounded-md border border-input ring-offset-background;
+    &.cm-focused {
+      @apply outline-none ring-2 ring-ring ring-offset-2;
+    }
+  }
+}

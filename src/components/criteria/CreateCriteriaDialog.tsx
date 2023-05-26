@@ -30,7 +30,7 @@ import { insertCriteriaSchema } from "~/shared/schemas/criteria";
 export type CreateCriteriaDialogProps = PropsWithChildren<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contestId: number;
+  contestId: string;
 }>;
 
 const formSchema = insertCriteriaSchema;

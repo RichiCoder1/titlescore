@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "50f3504b-8d89-402f-842e-7011b9de08a5",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "d165a734-7e11-4970-af75-9b6576d3b1a5",
+  "prevId": "3dee7866-9f78-4a5f-a7e1-2fb57dc6b37d",
   "tables": {
     "contestants": {
       "name": "contestants",
@@ -105,6 +105,13 @@
           "type": "date",
           "primaryKey": false,
           "notNull": true
+        },
+        "timezone": {
+          "name": "timezone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'UTC'"
         },
         "created_at": {
           "name": "created_at",
@@ -224,15 +231,21 @@
           "name": "score",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "default": 0
         },
         "comment": {
           "name": "comment",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "default": "''"
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -292,10 +305,10 @@
         }
       },
       "compositePrimaryKeys": {
-        "scores_contest_id_contestant_id_criteria_id": {
-          "name": "scores_contest_id_contestant_id_criteria_id",
+        "scores_judge_id_contestant_id_criteria_id": {
+          "name": "scores_judge_id_contestant_id_criteria_id",
           "columns": [
-            "contest_id",
+            "judge_id",
             "contestant_id",
             "criteria_id"
           ]

@@ -1,141 +1,125 @@
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "../trpc";
-import { submitScore } from "~/shared/schemas/scores";
+import { updateScoreSchema } from "~/shared/schemas/scores";
+import { scores } from "../schema";
+import { and, eq } from "drizzle-orm";
 
 export const scoresRouter = router({
-  submitScore: protectedProcedure
-    .input(submitScore)
+  updateScore: protectedProcedure
+    .input(updateScoreSchema)
     .meta({
       check: { permission: "score" },
     })
     .mutation(async ({ input, ctx }) => {
-      const { dbClient, authorize } = ctx;
+      const { db, authorize } = ctx;
 
-      const getContest = await dbClient
-        .from("criteria")
-        .select("contestId")
-        .eq("id", input.criteria_id)
-        .single();
-      if (getContest.error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: getContest.error.hint,
-          cause: getContest.error,
-        });
-      }
+      await authorize(input.contestId);
 
-      await authorize(getContest.data.contestId);
-
-      const result = await dbClient.from("scores").upsert([
-        {
-          judge_id: input.judge_id,
-          contestant_id: input.contestant_id,
-          criteria_id: input.criteria_id,
-          score: input.score ?? undefined,
+      const result = await db
+        .insert(scores)
+        .values({
+          contestId: input.contestId,
+          contestantId: input.contestantId,
+          judgeId: input.judgeId,
+          criteriaId: input.criteriaId,
           comment: input.comment,
-        },
-      ]);
+          score: input.score,
+        })
+        .onConflictDoUpdate({
+          target: [scores.judgeId, scores.contestantId, scores.criteriaId],
+          set: {
+            comment: input.comment,
+            score: input.score,
+          },
+        })
+        .returning();
 
-      if (result.error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: result.error.hint,
-          cause: result.error,
-        });
-      }
-      return result.data;
+      return result[0];
     }),
   get: protectedProcedure
     .input(
       z.object({
-        judge_id: z.string(),
-        criteria_id: z.string(),
-        contestant_id: z.string(),
+        judgeId: z.string(),
+        criteriaId: z.string(),
+        contestantId: z.string(),
+        contestId: z.string(),
       })
     )
     .meta({
       check: { permission: "view" },
     })
     .query(async ({ input, ctx }) => {
-      const { dbClient, authorize } = ctx;
-
-      const getContest = await dbClient
-        .from("criteria")
-        .select("contestId")
-        .eq("id", input.criteria_id)
-        .single();
-      if (getContest.error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: getContest.error.hint,
-          cause: getContest.error,
-        });
-      }
-
-      await authorize(getContest.data.contestId);
-
-      const result = await dbClient
-        .from("scores")
-        .select()
-        .eq("judge_id", input.judge_id)
-        .eq("criteria_id", input.criteria_id)
-        .eq("contestant_id", input.contestant_id)
-        .maybeSingle();
-
-      if (result.error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: result.error.hint,
-          cause: result.error,
-        });
-      }
-
-      return result.data;
+      const { db, authorize } = ctx;
+      await authorize(input.contestId);
+      return (
+        (await db.query.scores.findFirst({
+          where: and(
+            eq(scores.judgeId, input.judgeId),
+            eq(scores.criteriaId, input.criteriaId),
+            eq(scores.contestantId, input.contestantId)
+          ),
+        })) ?? {
+          ...input,
+        }
+      );
+    }),
+  summary: protectedProcedure
+    .input(
+      z.object({
+        judgeId: z.string(),
+        contestantId: z.string(),
+        contestId: z.string(),
+      })
+    )
+    .meta({
+      check: { permission: "view" },
+    })
+    .query(async ({ input, ctx }) => {
+      const { db, authorize } = ctx;
+      await authorize(input.contestId);
+      return db.query.scores.findMany({
+        where: and(
+          eq(scores.judgeId, input.judgeId),
+          eq(scores.contestantId, input.contestantId)
+        ),
+      });
     }),
   delete: protectedProcedure
     .input(
       z.object({
-        judge_id: z.string(),
-        criteria_id: z.string(),
-        contestant_id: z.string(),
+        judgeId: z.string(),
+        criteriaId: z.string(),
+        contestantId: z.string(),
       })
     )
     .meta({
       check: { permission: "manage" },
     })
     .mutation(async ({ input, ctx }) => {
-      const { dbClient, authorize } = ctx;
+      const { db, authorize } = ctx;
 
-      const getContest = await dbClient
-        .from("criteria")
-        .select("contestId")
-        .eq("id", input.criteria_id)
-        .single();
+      const existing = await db.query.scores.findFirst({
+        where: and(
+          eq(scores.judgeId, input.judgeId),
+          eq(scores.criteriaId, input.criteriaId),
+          eq(scores.contestantId, input.contestantId)
+        ),
+      });
 
-      if (getContest.error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: getContest.error.hint,
-          cause: getContest.error,
-        });
+      if (!existing) {
+        return false;
       }
 
-      await authorize(getContest.data.contestId);
+      await authorize(existing.contestId);
 
-      const result = await dbClient
-        .from("criteria")
-        .delete()
-        .eq("judge_id", input.judge_id)
-        .eq("criteria_id", input.criteria_id)
-        .eq("contestant_id", input.contestant_id);
-
-      if (result.error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: result.error.hint,
-          cause: result.error,
-        });
-      }
+      await db
+        .delete(scores)
+        .where(
+          and(
+            eq(scores.judgeId, input.judgeId),
+            eq(scores.criteriaId, input.criteriaId),
+            eq(scores.contestantId, input.contestantId)
+          )
+        );
     }),
 });

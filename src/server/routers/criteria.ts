@@ -7,6 +7,7 @@ import {
 } from "~/shared/schemas/criteria";
 import { criteria } from "../schema";
 import { eq } from "drizzle-orm";
+import { ulid } from "../helpers/ulid";
 
 export const criteriaRouter = router({
   create: protectedProcedure
@@ -22,17 +23,14 @@ export const criteriaRouter = router({
       const result = await db
         .insert(criteria)
         .values({
+          id: ulid(),
           contestId: input.contestId,
           name: input.name,
           description: input.description ?? "",
           weight: input.weight,
         })
-        .returning()
-        .all()
-        .catch((e: any) => {
-          console.error(e);
-          throw e;
-        });
+        .returning();
+
       return result[0];
     }),
   update: protectedProcedure
@@ -53,13 +51,12 @@ export const criteriaRouter = router({
           weight: input.weight,
         })
         .where(eq(criteria.id, input.id!))
-        .returning()
-        .get();
+        .returning();
 
-      return result;
+      return result[0];
     }),
   get: protectedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.string() }))
     .meta({
       check: { permission: "view" },
     })
@@ -75,7 +72,7 @@ export const criteriaRouter = router({
       return result;
     }),
   listByContestId: protectedProcedure
-    .input(z.object({ contestId: z.number() }))
+    .input(z.object({ contestId: z.string() }))
     .meta({
       check: { permission: "view" },
     })
@@ -91,7 +88,7 @@ export const criteriaRouter = router({
       return result;
     }),
   delete: protectedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.string() }))
     .meta({
       check: { permission: "manage" },
     })
@@ -108,12 +105,6 @@ export const criteriaRouter = router({
 
       await authorize(data!.contestId);
 
-      const result = await db.delete(criteria).where(eq(criteria.id, id)).run();
-      if (result.error) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: result.error,
-        });
-      }
+      await db.delete(criteria).where(eq(criteria.id, id));
     }),
 });

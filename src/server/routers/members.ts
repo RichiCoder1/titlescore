@@ -147,7 +147,7 @@ export const membersRouter = router({
       );
     }),
   listByContestId: protectedProcedure
-    .input(z.object({ contestId: z.number() }))
+    .input(z.object({ contestId: z.string() }))
     .meta({ check: { permission: "view" } })
     .query(async ({ ctx, input }) => {
       const { authClient, authorize, clerk } = ctx;
@@ -170,7 +170,7 @@ export const membersRouter = router({
       }));
     }),
   delete: protectedProcedure
-    .input(z.object({ contestId: z.number(), userId: z.string() }))
+    .input(z.object({ contestId: z.string(), userId: z.string() }))
     .meta({ check: { permission: "manage" } })
     .mutation(async ({ input, ctx }) => {
       const { authClient, authorize } = ctx;

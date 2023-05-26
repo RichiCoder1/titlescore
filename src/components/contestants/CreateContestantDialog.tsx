@@ -30,7 +30,7 @@ import { insertContestantsSchema } from "~/shared/schemas/contestants";
 export type CreateContestantsDialogProps = PropsWithChildren<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contestId: number;
+  contestId: string;
 }>;
 
 const formSchema = insertContestantsSchema;
@@ -41,7 +41,6 @@ export function CreateContestantsDialog({
   onOpenChange,
   contestId,
 }: CreateContestantsDialogProps) {
-  console.log({ contestId });
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {

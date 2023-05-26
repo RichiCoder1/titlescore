@@ -35,7 +35,7 @@ import {
 export type AddMemberDialogProps = PropsWithChildren<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contestId: number;
+  contestId: string;
 }>;
 
 const formSchema = addMemberSchema;
@@ -46,7 +46,6 @@ export function AddMemberDialog({
   onOpenChange,
   contestId,
 }: AddMemberDialogProps) {
-  console.log({ contestId });
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {

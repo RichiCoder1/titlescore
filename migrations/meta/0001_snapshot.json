@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "50f3504b-8d89-402f-842e-7011b9de08a5",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "88840851-be9c-4ab2-a6b1-8aa5d088faa0",
+  "prevId": "50f3504b-8d89-402f-842e-7011b9de08a5",
   "tables": {
     "contestants": {
       "name": "contestants",
@@ -105,6 +105,13 @@
           "type": "date",
           "primaryKey": false,
           "notNull": true
+        },
+        "timezone": {
+          "name": "timezone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'UTC'"
         },
         "created_at": {
           "name": "created_at",

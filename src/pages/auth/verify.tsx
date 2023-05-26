@@ -11,8 +11,6 @@ export const VerifyPage = () => {
   const toPath = useResolvedPath(redirectTo);
   const [signInProcessed, setSignInProcessed] = useState<boolean>(false);
 
-  console.log({ user, token, redirectTo });
-
   useEffect(() => {
     if (!signIn || !setSession || !token) {
       return;

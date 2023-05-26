@@ -1,92 +1,67 @@
-import { sql } from "drizzle-orm";
 import {
   integer,
-  sqliteTable,
   text,
-  customType,
   primaryKey,
-} from "drizzle-orm/sqlite-core";
+  pgTable,
+  timestamp,
+  date,
+} from "drizzle-orm/pg-core";
 
-const datetime = customType<{ data: Date; driverData: string }>({
-  dataType() {
-    return "TEXT";
-  },
-  toDriver(value: Date): string {
-    return value.toISOString();
-  },
-  fromDriver(value: string): Date {
-    return new Date(value);
-  },
-});
-
-export const contests = sqliteTable("contests", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const contests = pgTable("contests", {
+  id: text("id").primaryKey().notNull(),
   name: text("name").notNull(),
   description: text("description").default(""),
   creatorId: text("creator_id").notNull(),
-  startsAt: datetime("starts_at").notNull(),
-  endsAt: datetime("ends_at").notNull(),
-  createdAt: datetime("created_at")
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime("updated_at")
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+  startsAt: date("starts_at").notNull(),
+  endsAt: date("ends_at").notNull(),
+  timezone: text("timezone").notNull().default("UTC"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const contestants = sqliteTable("contestants", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  contestId: integer("contest_id")
+export const contestants = pgTable("contestants", {
+  id: text("id").primaryKey(),
+  contestId: text("contest_id")
     .notNull()
     .references(() => contests.id),
   name: text("name").notNull(),
   stageName: text("stage_name").notNull(),
-  createdAt: datetime("created_at")
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime("updated_at")
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const criteria = sqliteTable("criteria", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  contestId: integer("contest_id")
+export const criteria = pgTable("criteria", {
+  id: text("id").primaryKey(),
+  contestId: text("contest_id")
     .notNull()
     .references(() => contests.id),
   name: text("name").notNull(),
   description: text("description").notNull(),
   weight: integer("weight").notNull(),
-  createdAt: datetime("created_at")
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime("updated_at")
-    .notNull()
-    .default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const scores = sqliteTable(
+export const scores = pgTable(
   "scores",
   {
-    contestId: integer("contest_id")
+    contestId: text("contest_id")
       .notNull()
       .references(() => contests.id),
-    contestantId: integer("contestant_id")
+    contestantId: text("contestant_id")
       .notNull()
       .references(() => contestants.id),
-    criteriaId: integer("criteria_id")
+    criteriaId: text("criteria_id")
       .notNull()
       .references(() => criteria.id),
-    score: integer("score").notNull().default(0),
-    comment: text("comment").notNull().default(""),
-    createdAt: datetime("created_at")
-      .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: datetime("updated_at")
-      .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
+    judgeId: text("judge_id").notNull(),
+    score: integer("score").default(0),
+    comment: text("comment").default(""),
+    submittedAt: timestamp("submitted_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => ({
-    pk: primaryKey(table.contestId, table.contestantId, table.criteriaId),
+    pk: primaryKey(table.judgeId, table.contestantId, table.criteriaId),
   })
 );

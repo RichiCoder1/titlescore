@@ -34,7 +34,7 @@ import { ItemActions } from "~/components/ui/tableParts/ItemActions";
 import { useUser } from "@clerk/clerk-react";
 import { DropdownMenuItem } from "~/components/ui/DropdownMenu";
 
-export const columns: ColumnDef<Member>[] = [
+const columns: ColumnDef<Member>[] = [
   {
     accessorKey: "email",
     header: "Email",
@@ -45,7 +45,7 @@ export const columns: ColumnDef<Member>[] = [
   },
 ];
 
-export function Members({ contestId }: { contestId: number }) {
+export function Members({ contestId }: { contestId: string }) {
   const { user } = useUser();
   const utils = trpc.useContext();
   const { data, isLoading } = trpc.members.listByContestId.useQuery({
@@ -62,6 +62,7 @@ export function Members({ contestId }: { contestId: number }) {
       toast.error(`Failed to delete contest:\n\n${e}`);
     },
   });
+
   const table = useReactTable({
     data: data ?? [],
     columns,
@@ -96,6 +97,7 @@ export function Members({ contestId }: { contestId: number }) {
                       </TableHead>
                     );
                   })}
+                  <TableHead key="actions"></TableHead>
                 </TableRow>
               ))}
             </TableHeader>
@@ -120,7 +122,7 @@ export function Members({ contestId }: { contestId: number }) {
                         )}
                       </TableCell>
                     ))}
-                    <TableCell>
+                    <TableCell className="w-1">
                       <UpdateMemberDialog
                         open={row.getIsExpanded()}
                         onOpenChange={row.toggleExpanded}
@@ -138,7 +140,6 @@ export function Members({ contestId }: { contestId: number }) {
                           disabled={
                             isLoading || row.original.userId == user?.id
                           }
-                          title="asdasd"
                         >
                           <DropdownMenuItem
                             onClick={() =>
@@ -159,7 +160,7 @@ export function Members({ contestId }: { contestId: number }) {
                     </TableCell>
                   </TableRow>
                 ))
-              ) : (
+              ) : !isLoading ? (
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
@@ -168,7 +169,7 @@ export function Members({ contestId }: { contestId: number }) {
                     No results.
                   </TableCell>
                 </TableRow>
-              )}
+              ) : null}
             </TableBody>
           </Table>
         </CardContent>

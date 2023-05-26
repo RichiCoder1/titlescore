@@ -8,6 +8,7 @@ import {
 } from "~/shared/schemas/contestants";
 import { contestants } from "../schema";
 import { eq } from "drizzle-orm";
+import { ulid } from "../helpers/ulid";
 
 export const contestantsRouter = router({
   create: protectedProcedure
@@ -22,18 +23,18 @@ export const contestantsRouter = router({
         .insert(contestants)
         .values([
           {
+            id: ulid(),
             contestId: input.contestId,
             name: input.name,
             stageName: input.stageName,
           },
         ])
-        .returning()
-        .all();
+        .returning();
 
-      return result;
+      return result[0];
     }),
   get: protectedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.string() }))
     .meta({ check: { permission: "view" } })
     .query(async ({ input, ctx }) => {
       const { db, authorize } = ctx;
@@ -67,13 +68,12 @@ export const contestantsRouter = router({
           stageName: input.stageName ?? input.name,
         })
         .where(eq(contestants.id, input.id!))
-        .returning()
-        .get();
+        .returning();
 
-      return result;
+      return result[0];
     }),
   listByContestId: protectedProcedure
-    .input(z.object({ contestId: z.number() }))
+    .input(z.object({ contestId: z.string() }))
     .meta({ check: { permission: "view" } })
     .query(async ({ ctx, input }) => {
       const { db, authorize } = ctx;
@@ -86,7 +86,7 @@ export const contestantsRouter = router({
       return result;
     }),
   delete: protectedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
       const { db, authorize } = ctx;
       const { id } = input;
@@ -100,15 +100,6 @@ export const contestantsRouter = router({
 
       await authorize(data!.contestId);
 
-      const result = await db
-        .delete(contestants)
-        .where(eq(contestants.id, id))
-        .run();
-      if (result.error) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: result.error,
-        });
-      }
+      await db.delete(contestants).where(eq(contestants.id, id));
     }),
 });

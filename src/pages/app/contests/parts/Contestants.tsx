@@ -19,7 +19,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Contestants } from "~/shared/schemas/contestants";
+import { Contestant } from "~/shared/schemas/contestants";
 import { trpc } from "~/utils/trpc";
 import { PuffLoader } from "react-spinners";
 import { CreateContestantsDialog } from "~/components/contestants/CreateContestantDialog";
@@ -31,8 +31,10 @@ import { DialogTrigger } from "~/components/ui/Dialog";
 import { UpdateContestantsDialog } from "~/components/contestants/UpdateContestantDialog";
 import toast from "react-hot-toast/headless";
 import { ItemActions } from "~/components/ui/tableParts/ItemActions";
+import { useRole } from "~/utils/auth";
+import { Link } from "react-router-dom";
 
-export const columns: ColumnDef<Contestants>[] = [
+export const columns: ColumnDef<Contestant>[] = [
   {
     accessorKey: "name",
     header: "Name",
@@ -43,7 +45,9 @@ export const columns: ColumnDef<Contestants>[] = [
   },
 ];
 
-export function Contestants({ contestId }: { contestId: number }) {
+export function Contestants({ contestId }: { contestId: string }) {
+  const { canManage } = useRole({ contestId });
+
   const utils = trpc.useContext();
   const { data, isLoading } = trpc.contestants.listByContestId.useQuery({
     contestId,
@@ -92,6 +96,8 @@ export function Contestants({ contestId }: { contestId: number }) {
                       </TableHead>
                     );
                   })}
+                  {canManage ? <TableHead key="view"></TableHead> : null}
+                  <TableHead key="actions"></TableHead>
                 </TableRow>
               ))}
             </TableHeader>
@@ -116,22 +122,35 @@ export function Contestants({ contestId }: { contestId: number }) {
                         )}
                       </TableCell>
                     ))}
-                    <TableCell>
-                      <UpdateContestantsDialog
-                        open={row.getIsExpanded()}
-                        onOpenChange={row.toggleExpanded}
-                        contestants={row.original}
-                      >
-                        <ItemActions
-                          onEditClick={() => row.toggleExpanded()}
-                          onDeleteClick={() => mutate({ id: row.original.id })}
-                          disabled={isLoading}
-                        />
-                      </UpdateContestantsDialog>
+                    <TableCell className="w-1 whitespace-nowrap">
+                      <Button variant="link">
+                        <Link
+                          to={`/app/${contestId}/contestant/${row.original.id}`}
+                        >
+                          View and Score
+                        </Link>
+                      </Button>
                     </TableCell>
+                    {canManage ? (
+                      <TableCell className="w-1">
+                        <UpdateContestantsDialog
+                          open={row.getIsExpanded()}
+                          onOpenChange={row.toggleExpanded}
+                          contestants={row.original}
+                        >
+                          <ItemActions
+                            onEditClick={() => row.toggleExpanded()}
+                            onDeleteClick={() =>
+                              mutate({ id: row.original.id })
+                            }
+                            disabled={isLoading}
+                          />
+                        </UpdateContestantsDialog>
+                      </TableCell>
+                    ) : null}
                   </TableRow>
                 ))
-              ) : (
+              ) : !isLoading ? (
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
@@ -140,7 +159,7 @@ export function Contestants({ contestId }: { contestId: number }) {
                     No results.
                   </TableCell>
                 </TableRow>
-              )}
+              ) : null}
             </TableBody>
           </Table>
         </CardContent>
@@ -148,6 +167,7 @@ export function Contestants({ contestId }: { contestId: number }) {
           className={cn("flex", {
             "justify-center": isLoading,
             "justify-end": !isLoading,
+            hidden: !canManage,
           })}
         >
           {isLoading ? (

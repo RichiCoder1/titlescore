@@ -1,0 +1,2 @@
+ALTER TABLE "scores" DROP CONSTRAINT "scores_contest_id_contestant_id_criteria_id";
+ALTER TABLE "scores" ADD CONSTRAINT "scores_judge_id_contestant_id_criteria_id" PRIMARY KEY("judge_id","contestant_id","criteria_id");

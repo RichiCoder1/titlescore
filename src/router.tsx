@@ -7,6 +7,7 @@ import App from "./App";
 import AppLayout from "./pages/app/layout";
 import { IndexPage } from "./pages/app";
 import { ContestsIndexPage } from "./pages/app/contests";
+import { ContestantPage } from "./pages/app/contests/contestant";
 
 export const router = createBrowserRouter([
   {
@@ -20,18 +21,22 @@ export const router = createBrowserRouter([
             element: <Home />,
           },
           {
-            path: '/app',
+            path: "/app",
             element: <AppLayout />,
             children: [
               {
                 index: true,
-                element: <IndexPage />
+                element: <IndexPage />,
               },
               {
-                path: '/app/:contestId/',
-                element: <ContestsIndexPage />
-              }
-            ]
+                path: "/app/:contestId/",
+                element: <ContestsIndexPage />,
+              },
+              {
+                path: "/app/:contestId/contestant/:contestantId",
+                element: <ContestantPage />,
+              },
+            ],
           },
         ],
       },

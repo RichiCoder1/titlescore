@@ -11,12 +11,10 @@ import {
 } from "../ui/Dialog";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
-import { Textarea } from "../ui/Textarea";
 import * as z from "zod";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -26,14 +24,14 @@ import { trpc } from "~/utils/trpc";
 import { toast } from "react-hot-toast/headless";
 import { useNavigate } from "react-router";
 import {
-  Contestants,
+  Contestant,
   updateContestantsSchema,
 } from "~/shared/schemas/contestants";
 
 export type UpdateContestantsDialogProps = PropsWithChildren<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contestants: Contestants;
+  contestants: Contestant;
 }>;
 
 const formSchema = updateContestantsSchema;

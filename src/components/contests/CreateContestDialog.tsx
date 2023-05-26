@@ -1,4 +1,10 @@
-import { useEffect, useCallback, PropsWithChildren, useId } from "react";
+import {
+  useEffect,
+  useCallback,
+  PropsWithChildren,
+  useId,
+  useState,
+} from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -10,7 +16,7 @@ import {
   DialogTitle,
 } from "../ui/Dialog";
 import { Button } from "../ui/Button";
-import { format, addYears } from "date-fns";
+import { format, addYears, formatISO } from "date-fns";
 import { Input } from "../ui/Input";
 import { Textarea } from "../ui/Textarea";
 import * as z from "zod";
@@ -31,6 +37,14 @@ import { cn } from "~/utils/styles";
 import { trpc } from "~/utils/trpc";
 import { toast } from "react-hot-toast/headless";
 import { useNavigate } from "react-router";
+import { useTimezoneSelect, allTimezones } from "react-timezone-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/Select";
 
 export type CreateContestDialogProps = PropsWithChildren<{
   open: boolean;
@@ -53,6 +67,7 @@ const formSchema = insertContestSchema
         .refine((range) => {
           return range.from < range.to;
         }, "Start date must occur before the end date."),
+      tz: z.string(),
     })
   );
 
@@ -60,57 +75,74 @@ export function CreateContestDialog({
   children,
   open,
   onOpenChange,
-  shouldNotNavigate
+  shouldNotNavigate,
 }: CreateContestDialogProps) {
-
+  const [userTz] = useState(
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      tz: userTz,
+    },
   });
   const { reset } = form;
   const onShowDialog = useCallback(
     (open: boolean) => {
       onOpenChange?.(open);
-      reset({});
+      reset({
+        tz: userTz,
+      });
     },
     [onOpenChange, reset]
   );
   const formId = useId();
   const navigate = useNavigate();
   const utils = trpc.useContext();
+  const { options: tzOptions } = useTimezoneSelect({
+    labelStyle: "original",
+    timezones: allTimezones,
+  });
 
   const { mutateAsync, isLoading } = trpc.contest.create.useMutation({
     onMutate: async (contest) => {
       await utils.contest.list.cancel();
       const previous = utils.contest.list.getData();
-      utils.contest.list.setData(undefined, old => [...(old ?? []), {
-        ...contest,
-        id: -1,
-      } as any]);
+      utils.contest.list.setData(undefined, (old) => [
+        ...(old ?? []),
+        {
+          ...contest,
+          id: -1,
+        } as any,
+      ]);
       return { previous };
     },
     onError: (e, _, context) => {
-      console.error('test', e)
+      console.error("test", e);
       toast.error(`Failed to create contest:\n\n${e}`);
       utils.contest.list.setData(undefined, context!.previous);
     },
     onSettled() {
       utils.contest.list.invalidate();
-    }
+    },
   });
 
-  const onSubmit = useCallback(async (values: z.infer<typeof formSchema>) => {
-    const result = await mutateAsync({
-      name: values.name,
-      description: values.description,
-      startsAt: values.dates.from,
-      endsAt: values.dates.to
-    });
+  const onSubmit = useCallback(
+    async (values: z.infer<typeof formSchema>) => {
+      const result = await mutateAsync({
+        name: values.name,
+        description: values.description,
+        startsAt: formatISO(values.dates.from, { representation: "date" }),
+        endsAt: formatISO(values.dates.to, { representation: "date" }),
+      });
 
-    onOpenChange?.(false);
-    if (shouldNotNavigate !== true) {
-      navigate(`/app/${result.id}/`);
-    }
-  }, [formId, onOpenChange, navigate]);
+      onOpenChange?.(false);
+      if (shouldNotNavigate !== true) {
+        navigate(`/app/${result.id}/`);
+      }
+    },
+    [formId, onOpenChange, navigate]
+  );
 
   return (
     <Dialog open={open} onOpenChange={onShowDialog}>
@@ -175,8 +207,35 @@ export function CreateContestDialog({
                   </Popover>
                   <FormMessage />
                   <FormDescription>
-                    The start and end dates. Scores may not be modified outside these times and provides warnings when trying to perform certain operations outside this window.
+                    The start and end dates. Scores may not be modified outside
+                    these times and provides warnings when trying to perform
+                    certain operations outside this window.
                   </FormDescription>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="tz"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Timezone</FormLabel>
+                  <FormControl>
+                    <Select
+                      onValueChange={(value) => field.onChange(value)}
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[500px]">
+                        {tzOptions.map(({ value, label }) => (
+                          <SelectItem value={value}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -199,7 +258,11 @@ export function CreateContestDialog({
             />
           </form>
           <DialogFooter>
-            <Button variant="outline" onClick={() => onShowDialog(false)} disabled={isLoading}>
+            <Button
+              variant="outline"
+              onClick={() => onShowDialog(false)}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
             <Button type="submit" form={formId} disabled={isLoading}>

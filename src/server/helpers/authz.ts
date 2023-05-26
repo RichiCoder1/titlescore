@@ -92,7 +92,7 @@ export type Relationship = {
 export const checkPermission = async (
   client: AuthzClient,
   opts: {
-    resourceId: number | string;
+    resourceId: string;
     resourceType: string;
     userId: string;
     permission: string;
@@ -125,7 +125,7 @@ export const checkPermission = async (
 
 export const addContestMembers = async (
   client: AuthzClient,
-  contestId: number,
+  contestId: string,
   relations: Relationship[]
 ) => {
   const request = {
@@ -147,8 +147,6 @@ export const addContestMembers = async (
     })),
   };
 
-  console.log(JSON.stringify(request));
-
   const response = await client.post("v1/relationships/write", {
     json: request,
   });
@@ -157,7 +155,7 @@ export const addContestMembers = async (
 
 export const removeContestMembers = async (
   client: AuthzClient,
-  contestId: number,
+  contestId: string,
   relations: Relationship[]
 ) => {
   const request = {
@@ -187,23 +185,27 @@ export const removeContestMembers = async (
 
 export const updateMemberRole = async (
   client: AuthzClient,
-  contestId: number,
+  contestId: string,
   userId: string,
   relation: ContestRelationship
 ) => {
-  await removeContestMembers(client, contestId, [{
-    userId,
-    relation: undefined as any,
-  }]);
-  await addContestMembers(client, contestId, [{
-    userId,
-    relation,
-  }]);
+  await removeContestMembers(client, contestId, [
+    {
+      userId,
+      relation: undefined as any,
+    },
+  ]);
+  await addContestMembers(client, contestId, [
+    {
+      userId,
+      relation,
+    },
+  ]);
 };
 
 export const getContestMembers = async (
   client: AuthzClient,
-  contestId: number
+  contestId: string
 ) => {
   const request = {
     relationshipFilter: {
@@ -281,13 +283,13 @@ export const getContestIdsByUser = async (
     const relationship = parsed.result.relationship;
     contests.push(relationship.resource.objectId);
   }
-  return contests.map((id) => parseInt(id, 10));
+  return contests;
 };
 
 export const getRelation = async (
   client: AuthzClient,
   userId: string,
-  contestId: number
+  contestId: string
 ) => {
   const request = {
     relationshipFilter: {

@@ -1,12 +1,33 @@
 {
   "version": "5",
-  "dialect": "sqlite",
+  "dialect": "pg",
   "entries": [
     {
       "idx": 0,
       "version": "5",
-      "when": 1684910167896,
-      "tag": "0000_fluffy_boomerang",
+      "when": 1685061587902,
+      "tag": "0000_keen_wildside",
+      "breakpoints": false
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1685067943459,
+      "tag": "0001_high_power_pack",
+      "breakpoints": false
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1685080488665,
+      "tag": "0002_hot_tomas",
+      "breakpoints": false
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1685080623493,
+      "tag": "0003_nasty_tyrannus",
       "breakpoints": false
     }
   ]

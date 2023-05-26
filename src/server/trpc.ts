@@ -84,7 +84,7 @@ export const protectedProcedure = t.procedure.use((opts) => {
     });
   }
 
-  let authorize: (id: string | number) => Promise<void | never> = () =>
+  let authorize: (id: string) => Promise<void | never> = () =>
     Promise.resolve();
 
   if (meta?.check) {
@@ -93,11 +93,11 @@ export const protectedProcedure = t.procedure.use((opts) => {
 
     const userId = ctx.user.id;
 
-    authorize = async (id: string | number) => {
+    authorize = async (id: string) => {
       try {
         // If this is a contest procedure, check the contest first.
         if (!resourceType || resourceType === "contest") {
-          await checkContest(Number(id), db);
+          await checkContest(id, db);
         }
 
         const result = await checkPermission(authClient, {

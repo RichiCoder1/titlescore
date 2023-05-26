@@ -34,7 +34,7 @@ export type UpdateMemberDialogProps = PropsWithChildren<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
   member: Member;
-  contestId: number;
+  contestId: string;
 }>;
 
 const formSchema = updateMemberSchema;
