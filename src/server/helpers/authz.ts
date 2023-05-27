@@ -205,7 +205,8 @@ export const updateMemberRole = async (
 
 export const getContestMembers = async (
   client: AuthzClient,
-  contestId: string
+  contestId: string,
+  role?: string
 ) => {
   const request = {
     relationshipFilter: {
@@ -214,6 +215,7 @@ export const getContestMembers = async (
       optionalSubjectFilter: {
         subjectType: `${NAMESPACE}/user`,
       },
+      optionalRelation: role ?? undefined,
     },
     consistency: {
       fullyConsistent: true,

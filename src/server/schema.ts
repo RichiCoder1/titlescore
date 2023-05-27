@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   integer,
   text,
@@ -18,6 +19,18 @@ export const contests = pgTable("contests", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
+
+export const contestMembers = pgTable(
+  "contest_members",
+  {
+    userId: text("user_id").notNull(),
+    contestId: text("contest_id").notNull(),
+    displayName: text("display_name").notNull(),
+  },
+  (table) => ({
+    pk: primaryKey(table.userId, table.contestId),
+  })
+);
 
 export const contestants = pgTable("contestants", {
   id: text("id").primaryKey(),
@@ -65,3 +78,22 @@ export const scores = pgTable(
     pk: primaryKey(table.judgeId, table.contestantId, table.criteriaId),
   })
 );
+
+export const scoreRelations = relations(scores, ({ one }) => ({
+  judge: one(contestMembers, {
+    fields: [scores.judgeId],
+    references: [contestMembers.userId],
+  }),
+  contestant: one(contestants, {
+    fields: [scores.contestantId],
+    references: [contestants.id],
+  }),
+}));
+
+export const contestantRelations = relations(contestants, ({ many }) => ({
+  scores: many(scores),
+}));
+
+export const judgeRelations = relations(contestMembers, ({ many }) => ({
+  scores: many(scores),
+}));

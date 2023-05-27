@@ -36,8 +36,8 @@ import { DropdownMenuItem } from "~/components/ui/DropdownMenu";
 
 const columns: ColumnDef<Member>[] = [
   {
-    accessorKey: "email",
-    header: "Email",
+    accessorFn: (row) => row.displayName ?? row.email,
+    header: "User",
   },
   {
     accessorKey: "role",
@@ -48,9 +48,15 @@ const columns: ColumnDef<Member>[] = [
 export function Members({ contestId }: { contestId: string }) {
   const { user } = useUser();
   const utils = trpc.useContext();
-  const { data, isLoading } = trpc.members.listByContestId.useQuery({
-    contestId,
-  });
+  const { data, isLoading } = trpc.members.listByContestId.useQuery(
+    {
+      contestId,
+    },
+    {
+      staleTime: 5 * 60 * 1000,
+      cacheTime: 1 * 60 * 60 * 1000,
+    }
+  );
   const { mutate: resend } = trpc.members.resendInvite.useMutation();
   const { mutate } = trpc.members.delete.useMutation({
     onSuccess: () => {

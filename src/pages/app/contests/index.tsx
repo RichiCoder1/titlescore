@@ -4,12 +4,16 @@ import { Criteria } from "./parts/Criteria";
 import { Separator } from "~/components/ui/Separator";
 import { Contestants } from "./parts/Contestants";
 import { Members } from "./parts/Members";
+import { useRole } from "~/utils/auth";
+import { Scoring } from "./parts/Scoring";
 
 export function ContestsIndexPage() {
   const { contestId } = useParams();
   if (!contestId) {
     throw new Error("Missing contestId.");
   }
+
+  const { canManage } = useRole({ contestId });
 
   const {
     data: contest,
@@ -37,9 +41,10 @@ export function ContestsIndexPage() {
       </p>
       <Separator className="my-4" />
       <div className="mt-4 flex flex-col gap-4">
+        {canManage ? <Scoring contestId={contestId} /> : null}
         <Contestants contestId={contestId} />
         <Criteria contestId={contestId} />
-        <Members contestId={contestId} />
+        {canManage ? <Members contestId={contestId} /> : null}
       </div>
     </div>
   );

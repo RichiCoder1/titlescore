@@ -7,20 +7,9 @@ import { membersRouter } from "./members";
 import { scoresRouter } from "./scores";
 
 export const appRouter = router({
-  hello: protectedProcedure
-    .input(
-      z.object({
-        text: z.string().nullish(),
-      })
-    )
-    .query(({ input, ctx }) => {
-      return {
-        greeting: `hello ${input?.text ?? "world"} for ${
-          ctx.user?.email ?? "anonymous"
-        }`,
-        time: new Date(),
-      };
-    }),
+  getUser: protectedProcedure.input(z.object({})).query(({ ctx }) => {
+    return ctx.user;
+  }),
   contest: contestRouter,
   criteria: criteriaRouter,
   contestants: contestantsRouter,

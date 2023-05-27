@@ -15,6 +15,7 @@ import * as z from "zod";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -117,7 +118,32 @@ export function AddMemberDialog({
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="Jane John" type="email" {...field} />
+                    <Input
+                      placeholder="jane@kink.com"
+                      type="email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="displayName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Display/Stage Name</FormLabel>
+                  <FormDescription>
+                    The display name for this member. You can leave this blank,
+                    but it's recommended to set it for auditing and judges.
+                  </FormDescription>
+                  <FormControl>
+                    <Input
+                      placeholder="Jane John"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

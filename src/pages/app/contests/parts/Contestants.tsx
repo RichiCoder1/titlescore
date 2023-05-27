@@ -15,6 +15,7 @@ import {
 } from "~/components/ui/Table";
 import {
   ColumnDef,
+  createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
@@ -23,7 +24,7 @@ import { Contestant } from "~/shared/schemas/contestants";
 import { trpc } from "~/utils/trpc";
 import { PuffLoader } from "react-spinners";
 import { CreateContestantsDialog } from "~/components/contestants/CreateContestantDialog";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "~/components/ui/Button";
 import { PlusCircle } from "lucide-react";
 import { cn } from "~/utils/styles";
@@ -34,19 +35,8 @@ import { ItemActions } from "~/components/ui/tableParts/ItemActions";
 import { useRole } from "~/utils/auth";
 import { Link } from "react-router-dom";
 
-export const columns: ColumnDef<Contestant>[] = [
-  {
-    accessorKey: "name",
-    header: "Name",
-  },
-  {
-    accessorKey: "stageName",
-    header: "Stage Name",
-  },
-];
-
 export function Contestants({ contestId }: { contestId: string }) {
-  const { canManage } = useRole({ contestId });
+  const { role, canManage } = useRole({ contestId });
 
   const utils = trpc.useContext();
   const { data, isLoading } = trpc.contestants.listByContestId.useQuery({
@@ -62,6 +52,62 @@ export function Contestants({ contestId }: { contestId: string }) {
       toast.error(`Failed to delete contest:\n\n${e}`);
     },
   });
+
+  const columns = useMemo(() => {
+    const colHelper = createColumnHelper<Contestant>();
+    const cols: ColumnDef<Contestant>[] = [
+      {
+        accessorKey: "name",
+        header: "Name",
+      },
+      {
+        accessorKey: "stageName",
+        header: "Stage Name",
+      },
+    ];
+
+    if (role === "judge") {
+      cols.push(
+        colHelper.display({
+          id: "score",
+          size: 100,
+          cell: (props) => (
+            <Button variant="link">
+              <Link
+                to={`/app/${contestId}/contestant/${props.row.original.id}`}
+              >
+                View and Score
+              </Link>
+            </Button>
+          ),
+        })
+      );
+    }
+
+    if (canManage) {
+      cols.push(
+        colHelper.display({
+          id: "actions",
+          cell: ({ row }) => (
+            <UpdateContestantsDialog
+              open={row.getIsExpanded()}
+              onOpenChange={row.toggleExpanded}
+              contestants={row.original}
+            >
+              <ItemActions
+                onEditClick={() => row.toggleExpanded()}
+                onDeleteClick={() => mutate({ id: row.original.id })}
+                disabled={isLoading}
+              />
+            </UpdateContestantsDialog>
+          ),
+        })
+      );
+    }
+
+    return cols;
+  }, [role]);
+
   const table = useReactTable({
     data: data ?? [],
     columns,
@@ -96,8 +142,6 @@ export function Contestants({ contestId }: { contestId: string }) {
                       </TableHead>
                     );
                   })}
-                  {canManage ? <TableHead key="view"></TableHead> : null}
-                  <TableHead key="actions"></TableHead>
                 </TableRow>
               ))}
             </TableHeader>
@@ -110,11 +154,10 @@ export function Contestants({ contestId }: { contestId: string }) {
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
-                        className={cn({
-                          "line-clamp-5":
-                            cell.column.columnDef.header === "Description",
-                        })}
                         key={cell.id}
+                        className={cn({
+                          "w-1 whitespace-nowrap": cell.getValue() == null,
+                        })}
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
@@ -122,32 +165,6 @@ export function Contestants({ contestId }: { contestId: string }) {
                         )}
                       </TableCell>
                     ))}
-                    <TableCell className="w-1 whitespace-nowrap">
-                      <Button variant="link">
-                        <Link
-                          to={`/app/${contestId}/contestant/${row.original.id}`}
-                        >
-                          View and Score
-                        </Link>
-                      </Button>
-                    </TableCell>
-                    {canManage ? (
-                      <TableCell className="w-1">
-                        <UpdateContestantsDialog
-                          open={row.getIsExpanded()}
-                          onOpenChange={row.toggleExpanded}
-                          contestants={row.original}
-                        >
-                          <ItemActions
-                            onEditClick={() => row.toggleExpanded()}
-                            onDeleteClick={() =>
-                              mutate({ id: row.original.id })
-                            }
-                            disabled={isLoading}
-                          />
-                        </UpdateContestantsDialog>
-                      </TableCell>
-                    ) : null}
                   </TableRow>
                 ))
               ) : !isLoading ? (

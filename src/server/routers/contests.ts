@@ -102,13 +102,16 @@ export const contestRouter = router({
   }),
   getRole: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .query(({ ctx, input }) => {
+    .query(async ({ ctx, input }) => {
       const {
         authClient,
         user: { id },
       } = ctx;
 
-      return getRelation(authClient, id, input.id);
+      return {
+        relation: await getRelation(authClient, id, input.id),
+        userId: id,
+      };
     }),
   getRelations: protectedProcedure
     .input(z.object({ id: z.string() }))

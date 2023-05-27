@@ -10,8 +10,8 @@ import {
   updateMemberRole,
 } from "../helpers/authz";
 import { addMemberSchema, updateMemberSchema } from "~/shared/schemas/members";
-import { contests } from "../schema";
-import { eq } from "drizzle-orm";
+import { contestMembers, contests } from "../schema";
+import { and, eq, inArray } from "drizzle-orm";
 
 export const membersRouter = router({
   invite: protectedProcedure
@@ -30,14 +30,16 @@ export const membersRouter = router({
         emailAddress: [input.email],
       });
 
-      const targetUser = matchingUsers.shift();
+      let targetUser = matchingUsers.shift();
 
       let userId: string;
       if (targetUser == null) {
         const createdUser = await clerk.users.createUser({
           emailAddress: [input.email],
+          firstName: input.displayName ?? undefined,
         });
 
+        targetUser = createdUser;
         userId = createdUser.id;
       } else {
         userId = targetUser.id;
@@ -58,6 +60,12 @@ export const membersRouter = router({
           relation: input.role,
         },
       ]);
+
+      await db.insert(contestMembers).values({
+        userId,
+        contestId: input.contestId,
+        displayName: input.displayName ?? targetUser.firstName ?? input.email,
+      });
 
       await sendgrid.post("v3/mail/send", {
         json: {
@@ -147,22 +155,35 @@ export const membersRouter = router({
       );
     }),
   listByContestId: protectedProcedure
-    .input(z.object({ contestId: z.string() }))
+    .input(z.object({ contestId: z.string(), role: z.string().optional() }))
     .meta({ check: { permission: "view" } })
     .query(async ({ ctx, input }) => {
-      const { authClient, authorize, clerk } = ctx;
+      const { authClient, authorize, clerk, db } = ctx;
 
       await authorize(input.contestId);
 
-      const result = await getContestMembers(authClient, input.contestId);
+      const result = await getContestMembers(
+        authClient,
+        input.contestId,
+        input.role
+      );
       const userIds = result.map((member) => member.userId);
 
       const membersResult = await clerk.users.getUserList({
         userId: userIds,
       });
 
+      const membersMeta = await db.query.contestMembers.findMany({
+        where: and(
+          eq(contestMembers.contestId, input.contestId),
+          inArray(contestMembers.userId, userIds)
+        ),
+      });
+
       return membersResult.map((user) => ({
         userId: user.id,
+        displayName: membersMeta.find((member) => member.userId === user.id)!
+          .displayName,
         email: user.emailAddresses.find(
           (email) => email.id == user.primaryEmailAddressId
         )?.emailAddress!,

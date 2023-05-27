@@ -1,14 +1,13 @@
 "use client";
 
-import { ClerkProvider, useAuth, useClerk } from "@clerk/clerk-react";
+import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { dark } from "@clerk/themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 import { trpc } from "./utils/trpc";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HelmetProvider } from "react-helmet-async";
-import { atom } from "nanostores";
 import { useNavigate } from "react-router-dom";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
@@ -62,6 +61,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
         },
         variables,
       }}
+      afterSignInUrl="/app"
+      afterSignUpUrl="/app"
     >
       <HelmetProvider>
         <ClientProvider>{children}</ClientProvider>
@@ -91,7 +92,38 @@ const ClientProvider = ({ children }: { children: React.ReactNode }) => {
   );
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <CacheInvalidator />
+        {children}
+      </QueryClientProvider>
     </trpc.Provider>
   );
+};
+
+const CacheInvalidator = () => {
+  const { userId, isLoaded } = useAuth();
+  const utils = trpc.useContext();
+  const { data, isSuccess } = trpc.getUser.useQuery(
+    {},
+    {
+      enabled: isLoaded && userId != null,
+    }
+  );
+  useEffect(() => {
+    if (isSuccess && userId && data) {
+      if (userId !== data.id) {
+        console.info(
+          `Received new user, invalidating cache. ${data.id} => ${userId}.`
+        );
+        queryClient.resetQueries();
+      }
+    }
+  }, [isLoaded, data, userId, isSuccess]);
+  useEffect(() => {
+    if (isLoaded && !userId && utils.getUser.getData({})) {
+      console.info(`User signed out, resetting cache.`);
+      queryClient.resetQueries();
+    }
+  }, [userId, isLoaded]);
+  return null;
 };

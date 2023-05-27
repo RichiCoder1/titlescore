@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { ContestCombobox } from "./ContestCombobox";
 import { ScaleLoader } from "react-spinners";
 import { useIsFetching } from "@tanstack/react-query";
+import { trpc } from "~/utils/trpc";
 
 type Link = { name: string; to: string };
 
@@ -20,6 +21,7 @@ export default function Navbar() {
   const { isSignedIn } = useAuth();
   const { state } = useNavigation();
   const isQueryLoading = useIsFetching();
+  const utils = trpc.useContext();
 
   const [navigationLinks, setNavigationLinks] = useState<Link[]>([]);
   useEffect(() => {
@@ -27,6 +29,12 @@ export default function Navbar() {
   }, [isSignedIn]);
 
   const isLoading = state === "loading" || isQueryLoading > 0;
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      utils.invalidate();
+    }
+  }, [isSignedIn]);
 
   return (
     <Disclosure as="nav" className="bg-gray-800">

@@ -1,11 +1,5 @@
 import { useUser } from "@clerk/clerk-react";
-import {
-  ChevronLeftIcon,
-  ClipboardEditIcon,
-  Edit2Icon,
-  LockIcon,
-  SkipBackIcon,
-} from "lucide-react";
+import { ChevronLeftIcon, ClipboardEditIcon, LockIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { Link } from "react-router-dom";
@@ -29,7 +23,7 @@ export function ContestantPage() {
       t.contest.get({ id: contestId }),
       t.contestants.get({ id: contestantId }),
       t.criteria.listByContestId({ contestId }),
-      t.scores.summary({
+      t.scores.myScores({
         judgeId: user!.id,
         contestId,
         contestantId,

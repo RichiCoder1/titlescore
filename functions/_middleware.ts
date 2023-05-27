@@ -19,4 +19,4 @@ export const onRequest: PagesFunction<CfEnv> = async (context) => {
     }
   }
   return response;
-}
+};

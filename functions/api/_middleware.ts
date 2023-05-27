@@ -1,19 +1,14 @@
-import { verifyToken } from '@clerk/backend';
-import createClerkClient from '@clerk/clerk-sdk-node/esm/instance';
-import * as cookie from 'cookie';
+import createClerkClient from "@clerk/clerk-sdk-node/esm/instance";
+import * as cookie from "cookie";
 
 export const onRequest: PagesFunction<CfEnv, any, CfData> = async (context) => {
-  if (context.request.method === 'OPTIONS') {
+  if (context.request.method === "OPTIONS") {
     return context.next();
   }
 
   const url = new URL(context.request.url);
 
-  if (!url.pathname.startsWith('/api')) {
-    return context.next();
-  }
-
-  if (url.pathname.startsWith('/api/public')) {
+  if (url.pathname.startsWith("/api/public")) {
     return context.next();
   }
 
@@ -23,22 +18,22 @@ export const onRequest: PagesFunction<CfEnv, any, CfData> = async (context) => {
     jwtKey: context.env.CLERK_JWT_PUBLIC_KEY,
   });
 
-  const cookies = context.request.headers.get('Cookie');
-  const parsedCookies = cookie.parse(cookies || '');
+  const cookies = context.request.headers.get("Cookie");
+  const parsedCookies = cookie.parse(cookies || "");
 
-  let token = '';
-  if (parsedCookies['__session']) {
-    token = parsedCookies['__session'];
-  } else if (context.request.headers.has('Authorization')) {
-    const header = context.request.headers.get('Authorization')!;
-    const [type, value] = header.split(' ');
-    if (type === 'Bearer') {
+  let token = "";
+  if (parsedCookies["__session"]) {
+    token = parsedCookies["__session"];
+  } else if (context.request.headers.has("Authorization")) {
+    const header = context.request.headers.get("Authorization")!;
+    const [type, value] = header.split(" ");
+    if (type === "Bearer") {
       token = value;
     }
   }
 
   if (!/\S/.test(token)) {
-    return new Response('Unauthorized', { status: 401 });
+    return new Response("Unauthorized", { status: 401 });
   }
 
   try {
@@ -52,6 +47,8 @@ export const onRequest: PagesFunction<CfEnv, any, CfData> = async (context) => {
 
     return context.next();
   } catch (error) {
-    return new Response('Unauthorized\n\n' + (error as Error)?.toString(), { status: 401 });
+    return new Response("Unauthorized\n\n" + (error as Error)?.toString(), {
+      status: 401,
+    });
   }
 };
