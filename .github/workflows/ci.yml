@@ -2,7 +2,7 @@ name: CI
 on: [push]
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,3 +24,16 @@ jobs:
       - run: npm run lint
 
       - run: npm run build
+
+  sync-staging:
+    runs-on: ubuntu-latest
+    needs: [build]
+    permissions:
+      contents: write
+      deployments: write
+    name: Sync Staging
+    steps:
+      - uses: connor-baer/action-sync-branch@main
+        with:
+          branch: staging
+          token: ${{ github.token }}

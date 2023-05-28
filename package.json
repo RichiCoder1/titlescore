@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "pnpm@8.5.1",
   "scripts": {
     "vite:dev": "kill-port 3001 && vite --port 3001 --strictPort",
     "build": "vite build",
