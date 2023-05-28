@@ -1,0 +1,28 @@
+/** user represents a user */
+definition titlescore/user {}
+
+definition titlescore/system {
+  relation admin: titlescore/user
+}
+
+definition titlescore/contest {
+  relation owner: titlescore/user
+
+  relation organizer: titlescore/user
+
+  relation tally: titlescore/user
+
+  relation judge: titlescore/user
+
+  permission view = manage + judge
+
+  permission score_status = manage + tally
+
+  permission write_score = tally + judge
+
+  permission manage = admin + organizer
+
+  permission finalize_score = tally + manage
+
+  permission admin = owner
+}

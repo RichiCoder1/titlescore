@@ -1,9 +1,6 @@
 import { inferAsyncReturnType } from "@trpc/server";
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
-import { drizzle } from "drizzle-orm/neon-serverless";
 import ky from "ky";
-import { Pool } from "@neondatabase/serverless";
-import * as schema from "./schema";
 
 export const createContext =
   (cfCtx: CfCtx) => async (ctx: FetchCreateContextFnOptions) => {
@@ -29,19 +26,13 @@ export const createContext =
       credentials: undefined,
     });
 
-    const pool = new Pool({
-      connectionString: cfCtx.env.DATABASE_URL,
-    });
-
     return {
       user: {
         id: cfCtx.data.user?.sub,
         email: cfCtx.data.user?.email as string | undefined,
         claims: cfCtx.data.user,
       },
-      db: drizzle(pool, {
-        schema,
-      }),
+      db: cfCtx.data.db!,
       authClient,
       sendgrid,
       clerk: cfCtx.data.clerk!,

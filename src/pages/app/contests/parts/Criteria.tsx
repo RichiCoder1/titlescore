@@ -32,6 +32,7 @@ import { UpdateCriteriaDialog } from "~/components/criteria/UpdateCriteriaDialog
 import toast from "react-hot-toast/headless";
 import { ItemActions } from "~/components/ui/tableParts/ItemActions";
 import { useRole } from "~/utils/auth";
+import { Link } from "react-router-dom";
 
 const columns: ColumnDef<Criteria>[] = [
   {
@@ -158,21 +159,32 @@ export function Criteria({ contestId }: { contestId: string }) {
           </Table>
         </CardContent>
         <CardFooter
-          className={cn("flex", {
+          className={cn("flex space-x-2", {
             "justify-center": isLoading,
             "justify-end": !isLoading,
-            hidden: !canManage,
           })}
         >
           {isLoading ? (
             <PuffLoader className="my-4" color="hsl(var(--primary))" />
           ) : (
-            <DialogTrigger asChild>
-              <Button onClick={() => setShowCreate(true)}>
-                <PlusCircle className="mr-2 h-5 w-5" />
-                Add New Criteria
+            <>
+              <DialogTrigger asChild>
+                <Button
+                  className={cn("flex", {
+                    hidden: !canManage,
+                  })}
+                  onClick={() => setShowCreate(true)}
+                >
+                  <PlusCircle className="mr-2 h-5 w-5" />
+                  Add New Criteria
+                </Button>
+              </DialogTrigger>
+              <Button variant="secondary" asChild>
+                <Link to={`print?type=criteria`} target="_blank">
+                  Print Criteria Form
+                </Link>
               </Button>
-            </DialogTrigger>
+            </>
           )}
         </CardFooter>
       </Card>

@@ -4,7 +4,7 @@ import { NdJsonStream } from "~/utils/ndjsonstream";
 
 export const NAMESPACE = "titlescore";
 
-export const roleSchema = z.enum(["judge", "owner", "organizer"]);
+export const roleSchema = z.enum(["judge", "tally", "owner", "organizer"]);
 
 export type ContestRelationship = z.infer<typeof roleSchema>;
 

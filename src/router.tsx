@@ -8,6 +8,7 @@ import AppLayout from "./pages/app/layout";
 import { IndexPage } from "./pages/app";
 import { ContestsIndexPage } from "./pages/app/contests";
 import { ContestantPage } from "./pages/app/contests/contestant";
+import { ContestFormPrint } from "./pages/app/contests/print";
 
 export const router = createBrowserRouter([
   {
@@ -39,6 +40,10 @@ export const router = createBrowserRouter([
             ],
           },
         ],
+      },
+      {
+        path: "/app/:contestId/print",
+        element: <ContestFormPrint />,
       },
       {
         element: <DefaultLayout />,

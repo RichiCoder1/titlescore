@@ -2,10 +2,11 @@ import {
   AlertTriangleIcon,
   CheckIcon,
   ClipboardEditIcon,
-  FileWarningIcon,
   XCircleIcon,
 } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "~/components/ui/Button";
 import { Separator } from "~/components/ui/Separator";
 import { Table, TableBody, TableCell, TableRow } from "~/components/ui/Table";
 import {
@@ -26,6 +27,19 @@ export const Scoring = ({ contestId }: { contestId: string }) => {
   const { data: members } = trpc.members.listByContestId.useQuery({
     contestId,
   });
+
+  const calc = trpc.scores.calculate.useQuery(
+    {
+      contestId,
+    },
+    {
+      enabled: false,
+    }
+  );
+
+  useEffect(() => {
+    console.log({ scores: calc.data });
+  }, [calc.data]);
 
   const isLoading = isLoadingContest || isLoadingSummary;
   const contestDates = useContestInterval({ contest });
@@ -70,48 +84,68 @@ export const Scoring = ({ contestId }: { contestId: string }) => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex space-x-2 items-center">
-        <h2 className="text-lg font-semibold">Scoring</h2>
-        {!hasQuorum ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <AlertTriangleIcon className="h-5 w-5 text-orange-500" />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-[300px]">
-              You do not have enough judges assigned to drop high and low
-              scores. The final scores will be an average of all judges scores.
-            </TooltipContent>
-          </Tooltip>
+      <div className="mx-4 space-y-2">
+        <div className="flex space-x-2 items-center">
+          <h2 className="text-lg font-semibold">Scoring</h2>
+          {!hasQuorum ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <AlertTriangleIcon className="h-5 w-5 text-orange-500" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[300px]">
+                You do not have enough judges assigned to drop high and low
+                scores. The final scores will be an average of all judges
+                scores.
+              </TooltipContent>
+            </Tooltip>
+          ) : null}
+        </div>
+        {!isLoading && !contestDates.isActive ? (
+          <p>This contest is not currently active.</p>
         ) : null}
+        {!isLoading && contestDates.isActive ? (
+          <Table>
+            <TableBody>
+              {summary?.contestants?.map(({ id, name, judges }) => (
+                <TableRow key={id}>
+                  <TableCell>{name}</TableCell>
+                  {judges.map(({ judgeId, criteria }) => {
+                    return (
+                      <TableCell key={judgeId} className="">
+                        <div className="text-sm font-light mb-2">
+                          {
+                            members?.find((member) => member.userId === judgeId)
+                              ?.displayName
+                          }
+                        </div>
+                        <ScoringIndicator
+                          judgeId={judgeId}
+                          criteria={criteria}
+                        />
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : null}
+        <div className="flex justify-end space-x-2">
+          <Button variant="destructive" onClick={() => calc.refetch()}>
+            Calculate Scores
+          </Button>
+          <Button variant="secondary" asChild>
+            <Link
+              to={`/api/generate/${contestId}`}
+              reloadDocument
+              download={true}
+            >
+              Export Scoring Sheet
+            </Link>
+          </Button>
+        </div>
       </div>
-      {!isLoading && !contestDates.isActive ? (
-        <p>This contest is not currently active.</p>
-      ) : null}
-      {!isLoading && contestDates.isActive ? (
-        <Table>
-          <TableBody>
-            {summary?.contestants?.map(({ id, name, judges }) => (
-              <TableRow key={id}>
-                <TableCell>{name}</TableCell>
-                {judges.map(({ judgeId, criteria }) => {
-                  return (
-                    <TableCell key={judgeId} className="">
-                      <div className="text-sm font-light mb-2">
-                        {
-                          members?.find((member) => member.userId === judgeId)
-                            ?.displayName
-                        }
-                      </div>
-                      <ScoringIndicator judgeId={judgeId} criteria={criteria} />
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      ) : null}
-      <Separator />
+      <Separator className="mt-2" />
     </TooltipProvider>
   );
 };

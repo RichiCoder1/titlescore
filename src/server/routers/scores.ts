@@ -3,14 +3,14 @@ import { router, protectedProcedure } from "../trpc";
 import { updateScoreSchema } from "~/shared/schemas/scores";
 import { contestMembers, scores } from "../schema";
 import { and, eq, inArray } from "drizzle-orm";
-import { fill } from "lodash-es";
+import { groupBy } from "lodash-es";
 import { getContestMembers } from "../helpers/authz";
 
 export const scoresRouter = router({
   updateScore: protectedProcedure
     .input(updateScoreSchema)
     .meta({
-      check: { permission: "score" },
+      check: { permission: "write_score" },
     })
     .mutation(async ({ input, ctx }) => {
       const { db, authorize } = ctx;
@@ -72,7 +72,7 @@ export const scoresRouter = router({
       })
     )
     .meta({
-      check: { permission: "manage" },
+      check: { permission: "score_status" },
     })
     .query(async ({ input, ctx }) => {
       const { db, authorize, authClient } = ctx;
@@ -142,7 +142,7 @@ export const scoresRouter = router({
       })
     )
     .meta({
-      check: { permission: "score" },
+      check: { permission: "write_score" },
     })
     .query(async ({ input, ctx }) => {
       const { db, authorize } = ctx;
@@ -153,6 +153,89 @@ export const scoresRouter = router({
           eq(scores.contestantId, input.contestantId)
         ),
       });
+    }),
+  calculate: protectedProcedure
+    .input(
+      z.object({
+        contestId: z.string(),
+      })
+    )
+    .meta({
+      check: { permission: "finalize_score" },
+    })
+    .query(async ({ input, ctx }) => {
+      const { db, authorize } = ctx;
+      await authorize(input.contestId);
+
+      const contestantScores = await db.query.contestants.findMany({
+        where: eq(scores.contestId, input.contestId),
+        with: {
+          scores: true,
+        },
+      });
+
+      const mapped = contestantScores.map((contestant) => {
+        const scores = contestant.scores;
+        const byCriteria = groupBy(scores, (score) => score.criteriaId);
+        const criteriaScores = Object.entries(byCriteria).map(
+          ([criteriaId, scores]) => {
+            let dropped: {
+              high: { judgeId: string; score: number };
+              low: { judgeId: string; score: number };
+            } | null = null;
+            if (scores.length >= 5) {
+              const sorted = scores.sort((a, b) => a.score! - b.score!);
+              const high = sorted.pop();
+              const low = sorted.shift();
+              dropped = {
+                high: {
+                  judgeId: high!.judgeId,
+                  score: high!.score!,
+                },
+                low: {
+                  judgeId: low!.judgeId,
+                  score: low!.score!,
+                },
+              };
+              const average =
+                sorted.reduce((acc, score) => acc + score.score!, 0) /
+                sorted.length;
+              return {
+                criteriaId,
+                average,
+                dropped,
+              };
+            } else {
+              const average =
+                scores.reduce((acc, score) => acc + score.score!, 0) /
+                scores.length;
+              return {
+                criteriaId,
+                average,
+                dropped,
+              };
+            }
+          }
+        );
+        return {
+          contestantId: contestant.id,
+          name: contestant.name,
+          scores: criteriaScores,
+        };
+      });
+
+      const totalScores = mapped.map((contestant) => {
+        const total = contestant.scores.reduce(
+          (acc, { average }) => acc + average,
+          0
+        );
+        return {
+          ...contestant,
+          total,
+        };
+      });
+
+      return totalScores;
     }),
   delete: protectedProcedure
     .input(

@@ -30,5 +30,6 @@ export function useRole({ contestId }: { contestId: string }) {
   const canAdmin = role === "owner";
   const canManage = canAdmin || role === "organizer";
   const canView = canManage || role === "judge";
-  return { role, canAdmin, canManage, canView, canScore: canView };
+  const canScore = role === "judge" || role === "tally";
+  return { role, canAdmin, canManage, canView, canScore };
 }
