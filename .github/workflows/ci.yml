@@ -9,17 +9,17 @@ jobs:
       deployments: write
     name: CI
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Install Node.js
-        uses: actions/setup-node@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v3
         with:
           node-version-file: .node-version
-          cache: pnpm
-        
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
+
+      - run: pnpm install
 
       - run: npm run lint
 
