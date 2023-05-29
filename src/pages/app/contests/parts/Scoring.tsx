@@ -45,47 +45,45 @@ export const Scoring = ({ contestId }: { contestId: string }) => {
   const contestDates = useContestInterval({ contest });
   const hasQuorum = (summary?.judges?.length ?? 0) >= 5;
 
-  const ScoringIndicator = useCallback(
-    function ScoringIndicator({
-      criteria,
-    }: NonNullable<typeof summary>["contestants"][0]["judges"][0]) {
-      return (
-        <div className="flex space-x-2">
-          {criteria?.map((criterion) => {
-            const hasScore = criterion.score != null;
-            const isSubmitted = criterion.score?.submittedAt != null;
-            return (
-              <Tooltip key={criterion.criteriaId}>
-                <TooltipTrigger asChild>
-                  {hasScore ? (
-                    isSubmitted ? (
-                      <CheckIcon className="text-green-600" />
-                    ) : (
-                      <ClipboardEditIcon className="text-indigo-400" />
-                    )
+  const ScoringIndicator = useCallback(function ScoringIndicator({
+    criteria,
+  }: NonNullable<typeof summary>["contestants"][0]["judges"][0]) {
+    return (
+      <div className="flex space-x-2">
+        {criteria?.map((criterion) => {
+          const hasScore = criterion.score != null;
+          const isSubmitted = criterion.score?.submittedAt != null;
+          return (
+            <Tooltip key={criterion.criteriaId}>
+              <TooltipTrigger asChild>
+                {hasScore ? (
+                  isSubmitted ? (
+                    <CheckIcon className="text-green-600" />
                   ) : (
-                    <XCircleIcon className="text-slate-600" />
-                  )}
-                </TooltipTrigger>
-                <TooltipContent className="flex items-center flex-col">
-                  <div>{criterion.name}</div>
-                  <div>
-                    {criterion.score?.score ?? "No Score"} / {criterion.weight}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </div>
-      );
-    },
-    [summary]
-  );
+                    <ClipboardEditIcon className="text-indigo-400" />
+                  )
+                ) : (
+                  <XCircleIcon className="text-slate-600" />
+                )}
+              </TooltipTrigger>
+              <TooltipContent className="flex flex-col items-center">
+                <div>{criterion.name}</div>
+                <div>
+                  {criterion.score?.score ?? "No Score"} / {criterion.weight}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </div>
+    );
+  },
+  []);
 
   return (
     <TooltipProvider delayDuration={200}>
       <div className="mx-4 space-y-2">
-        <div className="flex space-x-2 items-center">
+        <div className="flex items-center space-x-2">
           <h2 className="text-lg font-semibold">Scoring</h2>
           {!hasQuorum ? (
             <Tooltip>
@@ -112,7 +110,7 @@ export const Scoring = ({ contestId }: { contestId: string }) => {
                   {judges.map(({ judgeId, criteria }) => {
                     return (
                       <TableCell key={judgeId} className="">
-                        <div className="text-sm font-light mb-2">
+                        <div className="mb-2 text-sm font-light">
                           {
                             members?.find((member) => member.userId === judgeId)
                               ?.displayName

@@ -10,7 +10,7 @@ import { DialogTrigger } from "../Dialog";
 import { ReactNode } from "react";
 
 export type ItemActionsProps = {
-  onEditClick: () => void;
+  onEditClick?: () => void;
   onDeleteClick: () => void;
   disabled: boolean;
   title?: string;
@@ -19,7 +19,7 @@ export type ItemActionsProps = {
 
 export function ItemActions(props: ItemActionsProps) {
   return (
-    <div className="w-full flex justify-end">
+    <div className="flex w-full justify-end">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="px-2">
@@ -29,16 +29,18 @@ export function ItemActions(props: ItemActionsProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           {props.children}
-          <DialogTrigger asChild>
-            <DropdownMenuItem
-              disabled={props.disabled}
-              className="cursor-pointer"
-              onClick={() => props.onEditClick()}
-              title={props.title}
-            >
-              Edit
-            </DropdownMenuItem>
-          </DialogTrigger>
+          {props.onEditClick != null ? (
+            <DialogTrigger asChild>
+              <DropdownMenuItem
+                disabled={props.disabled}
+                className="cursor-pointer"
+                onClick={() => props.onEditClick!()}
+                title={props.title}
+              >
+                Edit
+              </DropdownMenuItem>
+            </DialogTrigger>
+          ) : null}
 
           <DropdownMenuItem
             disabled={props.disabled}

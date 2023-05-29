@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -23,7 +22,6 @@ import {
 } from "../ui/Form";
 import { trpc } from "~/utils/trpc";
 import { toast } from "react-hot-toast/headless";
-import { useNavigate } from "react-router";
 import { addMemberSchema } from "~/shared/schemas/members";
 import {
   Select,
@@ -61,10 +59,9 @@ export function AddMemberDialog({
         contestId,
       });
     },
-    [onOpenChange, reset]
+    [contestId, onOpenChange, reset]
   );
   const formId = useId();
-  const navigate = useNavigate();
   const utils = trpc.useContext();
 
   const { mutateAsync, isLoading } = trpc.members.invite.useMutation({
@@ -95,7 +92,7 @@ export function AddMemberDialog({
       await mutateAsync(values);
       onOpenChange?.(false);
     },
-    [formId, onOpenChange, navigate]
+    [mutateAsync, onOpenChange]
   );
 
   return (

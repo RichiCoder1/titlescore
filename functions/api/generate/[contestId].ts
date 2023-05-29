@@ -72,8 +72,6 @@ export const onRequest: PagesFunction<CfEnv, string, CfData> = async (
     CreatedDate: new Date(),
   };
 
-  const dropHiLo = judges.length > 5;
-
   const data = writeXLSX(workbook, {
     type: "array",
     compression: true,

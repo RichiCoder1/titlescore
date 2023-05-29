@@ -1,17 +1,26 @@
 import { RedirectToSignIn, SignedIn, SignedOut } from "@clerk/clerk-react";
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
 
 export default function AppLayout() {
   return (
     <>
       <SignedIn>
-        <div className="mx-auto w-full md:max-w-4xl mt-10 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto mt-10 w-full px-4 sm:px-6 md:max-w-4xl lg:px-8">
           <Outlet />
         </div>
       </SignedIn>
-      <SignedOut>
-        <RedirectToSignIn afterSignInUrl="/app" />
-      </SignedOut>
+      <SignInRedirect />
     </>
+  );
+}
+
+function SignInRedirect() {
+  const loc = useLocation();
+  return (
+    <SignedOut>
+      <RedirectToSignIn
+        redirectUrl={`${loc.pathname}${loc.search}${loc.hash}`}
+      />
+    </SignedOut>
   );
 }

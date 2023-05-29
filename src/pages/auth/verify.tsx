@@ -33,7 +33,7 @@ export const VerifyPage = () => {
     };
 
     signInFunc();
-  }, [signIn, setSession]);
+  }, [signIn, setSession, token]);
 
   if (!token) {
     return <RedirectToSignIn />;

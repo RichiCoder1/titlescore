@@ -1,12 +1,35 @@
 import { z } from "zod";
-import { router, protectedProcedure } from "../trpc";
-import { updateScoreSchema } from "~/shared/schemas/scores";
+import { protectedProcedure, router } from "../trpc";
+import { submitScoreSchema, updateScoreSchema } from "~/shared/schemas/scores";
 import { contestMembers, scores } from "../schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { groupBy } from "lodash-es";
 import { getContestMembers } from "../helpers/authz";
 
 export const scoresRouter = router({
+  get: protectedProcedure
+    .input(
+      z.object({
+        judgeId: z.string(),
+        criteriaId: z.string(),
+        contestantId: z.string(),
+        contestId: z.string(),
+      })
+    )
+    .meta({
+      check: { permission: "view" },
+    })
+    .query(async ({ input, ctx }) => {
+      const { db, authorize } = ctx;
+      await authorize(input.contestId);
+      return await db.query.scores.findFirst({
+        where: and(
+          eq(scores.judgeId, input.judgeId),
+          eq(scores.criteriaId, input.criteriaId),
+          eq(scores.contestantId, input.contestantId)
+        ),
+      });
+    }),
   updateScore: protectedProcedure
     .input(updateScoreSchema)
     .meta({
@@ -38,32 +61,31 @@ export const scoresRouter = router({
 
       return result[0];
     }),
-  get: protectedProcedure
-    .input(
-      z.object({
-        judgeId: z.string(),
-        criteriaId: z.string(),
-        contestantId: z.string(),
-        contestId: z.string(),
-      })
-    )
+  finalizeScore: protectedProcedure
+    .input(submitScoreSchema)
     .meta({
-      check: { permission: "view" },
+      check: { permission: "write_score" },
     })
-    .query(async ({ input, ctx }) => {
+    .mutation(async ({ input, ctx }) => {
       const { db, authorize } = ctx;
+
       await authorize(input.contestId);
+
       return (
-        (await db.query.scores.findFirst({
-          where: and(
-            eq(scores.judgeId, input.judgeId),
-            eq(scores.criteriaId, input.criteriaId),
-            eq(scores.contestantId, input.contestantId)
-          ),
-        })) ?? {
-          ...input,
-        }
-      );
+        await db
+          .update(scores)
+          .set({
+            submittedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(scores.judgeId, input.judgeId),
+              eq(scores.criteriaId, input.criteriaId),
+              eq(scores.contestantId, input.contestantId)
+            )
+          )
+          .returning()
+      )[0];
     }),
   summary: protectedProcedure
     .input(
@@ -224,7 +246,7 @@ export const scoresRouter = router({
         };
       });
 
-      const totalScores = mapped.map((contestant) => {
+      return mapped.map((contestant) => {
         const total = contestant.scores.reduce(
           (acc, { average }) => acc + average,
           0
@@ -234,8 +256,6 @@ export const scoresRouter = router({
           total,
         };
       });
-
-      return totalScores;
     }),
   delete: protectedProcedure
     .input(

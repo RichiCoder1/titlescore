@@ -23,7 +23,7 @@ export function IndexPage() {
               Contests
             </h2>
           </div>
-          <div className="flex ml-4 mt-0">
+          <div className="ml-4 mt-0 flex">
             <DialogTrigger asChild>
               <Button title="Create a new contest">
                 <PlusIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
@@ -34,7 +34,7 @@ export function IndexPage() {
 
         {isEmpty ? (
           <div>
-            <div className="text-center mt-12">
+            <div className="mt-12 text-center">
               <svg
                 className="mx-auto h-12 w-12 text-gray-400"
                 fill="none"

@@ -34,7 +34,7 @@ export function ContestsIndexPage() {
   return (
     <div>
       <h1 className="text-xl font-semibold">{contest.name}</h1>
-      <p className="mt-1 text-xd leading-6 text-gray-500 max-w-fit">
+      <p className="mt-1 max-w-fit text-xs leading-6 text-gray-500">
         <span className="relative truncate">
           {contest.startsAt} - {contest.endsAt}
         </span>

@@ -1,11 +1,7 @@
 import { useParams } from "react-router";
 import { trpc } from "./trpc";
 import { Contest } from "~/shared/schemas/contests";
-import {
-  formatDistanceToNow,
-  formatRelative,
-  isWithinInterval,
-} from "date-fns/esm";
+import { formatRelative, isWithinInterval } from "date-fns/esm";
 import { toDate } from "date-fns-tz";
 import { format } from "date-fns";
 

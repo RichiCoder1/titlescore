@@ -15,6 +15,7 @@ import {
 } from "~/components/ui/Table";
 import {
   ColumnDef,
+  createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
@@ -23,21 +24,31 @@ import { Member } from "~/shared/schemas/members";
 import { trpc } from "~/utils/trpc";
 import { PuffLoader } from "react-spinners";
 import { AddMemberDialog } from "~/components/members/AddMemberDialog";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "~/components/ui/Button";
 import { PlusCircle } from "lucide-react";
 import { cn } from "~/utils/styles";
 import { DialogTrigger } from "~/components/ui/Dialog";
-import { UpdateMemberDialog } from "~/components/members/UpdateMemberDialog";
 import toast from "react-hot-toast/headless";
 import { ItemActions } from "~/components/ui/tableParts/ItemActions";
 import { useUser } from "@clerk/clerk-react";
 import { DropdownMenuItem } from "~/components/ui/DropdownMenu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "~/components/ui/Tooltip";
 
-const columns: ColumnDef<Member>[] = [
+const baseColumnDefs: ColumnDef<Member>[] = [
   {
     accessorFn: (row) => row.displayName ?? row.email,
     header: "User",
+    cell: ({ cell, row }) => (
+      <Tooltip>
+        <TooltipTrigger>{cell.renderValue() as string}</TooltipTrigger>
+        <TooltipContent>{row.original.email}</TooltipContent>
+      </Tooltip>
+    ),
   },
   {
     accessorKey: "role",
@@ -68,6 +79,40 @@ export function Members({ contestId }: { contestId: string }) {
       toast.error(`Failed to delete contest:\n\n${e}`);
     },
   });
+
+  const colHelper = createColumnHelper<Member>();
+  const columns = useMemo(() => {
+    return [
+      ...baseColumnDefs,
+      colHelper.display({
+        id: "actions",
+        cell: ({ row }) => (
+          <ItemActions
+            onDeleteClick={() =>
+              mutate({
+                contestId: contestId,
+                userId: row.original.userId,
+              })
+            }
+            disabled={isLoading || row.original.userId == user?.id}
+          >
+            <DropdownMenuItem
+              onClick={() =>
+                resend({
+                  contestId: contestId,
+                  email: row.original.email,
+                  role: row.original.role,
+                })
+              }
+              disabled={isLoading || row.original.userId == user?.id}
+            >
+              Resend Invite Link
+            </DropdownMenuItem>
+          </ItemActions>
+        ),
+      }),
+    ];
+  }, [colHelper, isLoading, user?.id, mutate, contestId, resend]);
 
   const table = useReactTable({
     data: data ?? [],
@@ -103,7 +148,6 @@ export function Members({ contestId }: { contestId: string }) {
                       </TableHead>
                     );
                   })}
-                  <TableHead key="actions"></TableHead>
                 </TableRow>
               ))}
             </TableHeader>
@@ -119,6 +163,7 @@ export function Members({ contestId }: { contestId: string }) {
                         className={cn({
                           "line-clamp-5":
                             cell.column.columnDef.header === "Description",
+                          "w-1 whitespace-nowrap": cell.getValue() == null,
                         })}
                         key={cell.id}
                       >
@@ -128,48 +173,12 @@ export function Members({ contestId }: { contestId: string }) {
                         )}
                       </TableCell>
                     ))}
-                    <TableCell className="w-1">
-                      <UpdateMemberDialog
-                        open={row.getIsExpanded()}
-                        onOpenChange={row.toggleExpanded}
-                        member={row.original}
-                        contestId={contestId}
-                      >
-                        <ItemActions
-                          onEditClick={() => row.toggleExpanded()}
-                          onDeleteClick={() =>
-                            mutate({
-                              contestId: contestId,
-                              userId: row.original.userId,
-                            })
-                          }
-                          disabled={
-                            isLoading || row.original.userId == user?.id
-                          }
-                        >
-                          <DropdownMenuItem
-                            onClick={() =>
-                              resend({
-                                contestId: contestId,
-                                email: row.original.email,
-                                role: row.original.role,
-                              })
-                            }
-                            disabled={
-                              isLoading || row.original.userId == user?.id
-                            }
-                          >
-                            Resend Invite Link
-                          </DropdownMenuItem>
-                        </ItemActions>
-                      </UpdateMemberDialog>
-                    </TableCell>
                   </TableRow>
                 ))
               ) : !isLoading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={columns.length}
+                    colSpan={baseColumnDefs.length}
                     className="h-24 text-center"
                   >
                     No results.

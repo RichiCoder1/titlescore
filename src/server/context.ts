@@ -1,6 +1,7 @@
 import { inferAsyncReturnType } from "@trpc/server";
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import ky from "ky";
+import type { KyInstance } from "node_modules/ky/distribution/types/ky";
 
 export const createContext =
   (cfCtx: CfCtx) => async (ctx: FetchCreateContextFnOptions) => {
@@ -44,4 +45,4 @@ export const createContext =
 export type Context = inferAsyncReturnType<
   inferAsyncReturnType<typeof createContext>
 >;
-export type AuthzClient = Context["authClient"];
+export type AuthzClient = KyInstance;

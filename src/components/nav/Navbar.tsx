@@ -34,7 +34,7 @@ export default function Navbar() {
     if (!isSignedIn) {
       utils.invalidate();
     }
-  }, [isSignedIn]);
+  }, [isSignedIn, utils]);
 
   return (
     <Disclosure as="nav" className="bg-gray-800">
@@ -43,7 +43,7 @@ export default function Navbar() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 items-center justify-between">
               <div className="flex items-center">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <NavLink to={isSignedIn ? "/app" : "/"}>
                     <img
                       className="h-8 w-8"
@@ -77,7 +77,7 @@ export default function Navbar() {
                 </div>
               </div>
               <div className="flex-1">
-                <div className="mr-6 md:mr-0 flex justify-end items-center md:ml-6">
+                <div className="mr-6 flex items-center justify-end md:ml-6 md:mr-0">
                   <Transition
                     show={isLoading}
                     enter="transition-opacity duration-150"

@@ -24,7 +24,6 @@ import {
 } from "../ui/Form";
 import { trpc } from "~/utils/trpc";
 import { toast } from "react-hot-toast/headless";
-import { useNavigate } from "react-router";
 import { Criteria, updateCriteriaSchema } from "~/shared/schemas/criteria";
 
 export type UpdateCriteriaDialogProps = PropsWithChildren<{
@@ -55,10 +54,9 @@ export function UpdateCriteriaDialog({
         ...criteria,
       });
     },
-    [onOpenChange, reset]
+    [criteria, onOpenChange, reset]
   );
   const formId = useId();
-  const navigate = useNavigate();
   const utils = trpc.useContext();
 
   const { mutateAsync, isLoading } = trpc.criteria.update.useMutation({
@@ -108,7 +106,7 @@ export function UpdateCriteriaDialog({
       await mutateAsync(values);
       onOpenChange?.(false);
     },
-    [formId, onOpenChange, navigate]
+    [mutateAsync, onOpenChange]
   );
 
   return (

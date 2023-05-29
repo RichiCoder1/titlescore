@@ -106,7 +106,7 @@ export function Contestants({ contestId }: { contestId: string }) {
     }
 
     return cols;
-  }, [role]);
+  }, [canManage, contestId, isLoading, mutate, role]);
 
   const table = useReactTable({
     data: data ?? [],

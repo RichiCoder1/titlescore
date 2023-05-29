@@ -43,7 +43,9 @@ export const contestRouter = router({
       ]).catch(async (e) => {
         try {
           await db.delete(contests).where(eq(contests.id, newContestId));
-        } catch {}
+        } catch {
+          /* empty */
+        }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:

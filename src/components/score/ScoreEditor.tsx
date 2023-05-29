@@ -23,6 +23,17 @@ import { trpc } from "~/utils/trpc";
 import { updateScoreSchema } from "~/shared/schemas/scores";
 import { Button } from "../ui/Button";
 import { Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTrigger,
+} from "~/components/ui/AlertDialog.tsx";
+import { cn } from "~/utils/styles.ts";
 
 export type ScoreEditorProps = {
   judgeId: string;
@@ -47,7 +58,7 @@ export function ScoreEditor(props: ScoreEditorProps) {
   const schema = useMemo(() => {
     return scoreSchema.merge(
       z.object({
-        score: z.coerce.number().min(0).max(criteria.weight).nullable(),
+        score: z.coerce.number().min(0).max(criteria.weight).nullish(),
       })
     );
   }, [criteria]);
@@ -58,7 +69,7 @@ export function ScoreEditor(props: ScoreEditorProps) {
       contestantId: props.contestantId,
       judgeId: props.judgeId,
     }),
-    [props]
+    [props.contestId, props.contestantId, props.criteria.id, props.judgeId]
   );
   const { data, isSuccess, refetch } = trpc.scores.get.useQuery(
     {
@@ -84,9 +95,9 @@ export function ScoreEditor(props: ScoreEditorProps) {
     }
   }, [data, isSuccess]);
   useEffect(() => {
-    form.reset(utils.scores.get.getData(queryIds));
+    form.reset(utils.scores.get.getData(queryIds) ?? queryIds);
     refetch();
-  }, [criteria]);
+  }, [queryIds]);
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -95,8 +106,19 @@ export function ScoreEditor(props: ScoreEditorProps) {
   }, 1000);
 
   const { mutate, isLoading } = trpc.scores.updateScore.useMutation({
-    onMutate() {
+    async onMutate(score) {
       autoSave.cancel();
+      await utils.scores.get.cancel();
+
+      const previous = utils.scores.get.getData(queryIds);
+      utils.scores.get.setData(queryIds, {
+        ...previous!,
+        ...score,
+      });
+      return { previous };
+    },
+    onError(_, __, ctx) {
+      utils.scores.get.setData(queryIds, ctx!.previous);
     },
     onSettled(data) {
       form.reset(undefined, {
@@ -106,6 +128,7 @@ export function ScoreEditor(props: ScoreEditorProps) {
         utils.scores.get.setData(queryIds, data);
       }
       utils.scores.summary.invalidate();
+      utils.scores.myScores.invalidate();
     },
   });
 
@@ -114,26 +137,51 @@ export function ScoreEditor(props: ScoreEditorProps) {
     if (form.formState.isDirty && form.formState.isValid && !isLoading) {
       autoSave();
     }
-  }, [form.formState, autoSave, valueWatch]);
+  }, [form.formState, autoSave, valueWatch, isLoading]);
 
   const onSubmit = useCallback(
     async (values: z.infer<typeof scoreSchema>) => {
       mutate(values);
     },
-    [mutate, form]
+    [mutate]
   );
+
+  const finalize = trpc.scores.finalizeScore.useMutation({
+    onMutate() {
+      autoSave.cancel();
+      const previous = utils.scores.get.getData(queryIds);
+      utils.scores.get.setData(queryIds, {
+        ...previous!,
+        submittedAt: new Date(),
+      });
+      return { previous };
+    },
+    onError(_, __, ctx) {
+      utils.scores.get.setData(queryIds, ctx!.previous);
+    },
+    onSettled(data) {
+      if (data) {
+        utils.scores.get.setData(queryIds, data);
+      }
+      utils.scores.summary.invalidate();
+      utils.scores.myScores.invalidate();
+    },
+  });
 
   return (
     <Form {...form}>
-      <p className="text-xs font-light text-slate-600/90 -mb-1">category</p>
+      <p className="-mb-1 text-xs font-light text-slate-600/90">criteria</p>
       <h4 className="text-xl font-semibold">{criteria.name}</h4>
-      <p className="text-xs font-light text-slate-600/90 mt-2 ">
-        category guidance
+      <p className="mt-2 text-xs font-light text-slate-600/90 ">
+        criteria guidance
       </p>
       <p className="text-sm">{criteria.description}</p>
       <Separator className="my-4" />
       <form id={formId} ref={formRef} onSubmit={form.handleSubmit(onSubmit)}>
-        <fieldset className="border-none space-y-2" disabled={!isSuccess}>
+        <fieldset
+          className="space-y-2 border-none"
+          disabled={!isSuccess || data?.submittedAt != null}
+        >
           <FormField
             control={form.control}
             name="comment"
@@ -150,7 +198,7 @@ export function ScoreEditor(props: ScoreEditorProps) {
                   theme={theme}
                   extensions={extensions}
                   height="200px"
-                  readOnly={!isSuccess}
+                  readOnly={!isSuccess || data?.submittedAt != null}
                   basicSetup={{
                     lineNumbers: false,
                     foldGutter: false,
@@ -177,12 +225,18 @@ export function ScoreEditor(props: ScoreEditorProps) {
                 </FormDescription>
                 <div className="flex flex-row items-center">
                   <Input
+                    type="number"
                     className="w-[100px]"
                     min={0}
                     max={criteria.weight}
                     pattern="\d+"
                     {...field}
                     value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value == "" ? null : e.target.value
+                      )
+                    }
                   />{" "}
                   <span className="ml-2 text-sm text-slate-500">
                     / {criteria.weight}
@@ -192,29 +246,47 @@ export function ScoreEditor(props: ScoreEditorProps) {
               </FormItem>
             )}
           />
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="mt-4 mr-2 w-2/6 overflow-hidden"
+          <div
+            className={cn("mt-2 flex space-x-2", {
+              hidden: data?.submittedAt != null,
+            })}
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              "Save"
-            )}
-          </Button>
-          <Button
-            type="submit"
-            variant="destructive"
-            className="mt-4 w-2/6 block"
-          >
-            Finalize Score
-          </Button>
+            <Button type="submit" className="w-2/6 overflow-hidden">
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )}
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-2/6">
+                  Finalize Score
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  Are you sure you want to finalize your score?
+                </AlertDialogHeader>
+                <AlertDialogDescription>
+                  Your score will be final and un-editable once you submit.
+                </AlertDialogDescription>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => finalize.mutate(queryIds)}>
+                    Submit My Score
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </fieldset>
       </form>
     </Form>
   );
 }
+
+export default ScoreEditor;

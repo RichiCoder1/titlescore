@@ -186,8 +186,8 @@ export const membersRouter = router({
           .displayName,
         email: user.emailAddresses.find(
           (email) => email.id == user.primaryEmailAddressId
-        )?.emailAddress!,
-        role: result.find((member) => member.userId === user.id)?.relation!,
+        )!.emailAddress,
+        role: result.find((member) => member.userId === user.id)!.relation,
       }));
     }),
   delete: protectedProcedure

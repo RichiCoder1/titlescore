@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useCallback,
-  PropsWithChildren,
-  useId,
-  useState,
-} from "react";
+import { useCallback, PropsWithChildren, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -94,7 +88,7 @@ export function CreateContestDialog({
         tz: userTz,
       });
     },
-    [onOpenChange, reset]
+    [onOpenChange, reset, userTz]
   );
   const formId = useId();
   const navigate = useNavigate();
@@ -141,7 +135,7 @@ export function CreateContestDialog({
         navigate(`/app/${result.id}/`);
       }
     },
-    [formId, onOpenChange, navigate]
+    [mutateAsync, onOpenChange, shouldNotNavigate, navigate]
   );
 
   return (

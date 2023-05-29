@@ -8,7 +8,12 @@ export const updateScoreSchema = z.object({
   criteriaId: z.string(),
   contestantId: z.string(),
   comment: z.string().nullish(),
-  score: z.coerce.number().nullish(),
+  score: z.number().nullish(),
+});
+
+export const submitScoreSchema = updateScoreSchema.omit({
+  comment: true,
+  score: true,
 });
 
 export const selectScoreSchema = createSelectSchema(scores);

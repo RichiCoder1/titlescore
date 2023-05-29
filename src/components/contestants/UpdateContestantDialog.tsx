@@ -22,7 +22,6 @@ import {
 } from "../ui/Form";
 import { trpc } from "~/utils/trpc";
 import { toast } from "react-hot-toast/headless";
-import { useNavigate } from "react-router";
 import {
   Contestant,
   updateContestantsSchema,
@@ -56,10 +55,9 @@ export function UpdateContestantsDialog({
         ...contestants,
       });
     },
-    [onOpenChange, reset]
+    [contestants, onOpenChange, reset]
   );
   const formId = useId();
-  const navigate = useNavigate();
   const utils = trpc.useContext();
 
   const { mutateAsync, isLoading } = trpc.contestants.update.useMutation({
@@ -114,7 +112,7 @@ export function UpdateContestantsDialog({
       await mutateAsync(values);
       onOpenChange?.(false);
     },
-    [formId, onOpenChange, navigate]
+    [mutateAsync, onOpenChange]
   );
 
   return (

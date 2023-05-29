@@ -13,7 +13,7 @@ export function useRole({ contestId }: { contestId: string }) {
     if (data && user && data.userId !== user.id) {
       utils.contest.getRole.invalidate({ id: contestId });
     }
-  }, [user, data]);
+  }, [user, data, utils.contest.getRole, contestId]);
 
   if (!user || !data) {
     return {

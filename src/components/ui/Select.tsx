@@ -17,8 +17,6 @@ const SelectGroup = SelectPrimitive.Group;
 
 const SelectValue = SelectPrimitive.Value;
 
-const ScrollUpButton = SelectPrimitive.ScrollUpButton;
-
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
@@ -55,7 +53,7 @@ const SelectContent = React.forwardRef<
       {...props}
     >
       <SelectPrimitive.ScrollUpButton>
-        <ChevronUpIcon className="absolute mx-auto top-0 left-0 right-0 h-4 w-4 opacity-80" />
+        <ChevronUpIcon className="absolute inset-x-0 top-0 mx-auto h-4 w-4 opacity-80" />
       </SelectPrimitive.ScrollUpButton>
       <SelectPrimitive.Viewport
         className={cn(
@@ -67,7 +65,7 @@ const SelectContent = React.forwardRef<
         {children}
       </SelectPrimitive.Viewport>
       <SelectPrimitive.ScrollDownButton>
-        <ChevronDownIcon className="absolute bottom-0 left-0 right-0 mx-auto h-4 w-4 opacity-80" />
+        <ChevronDownIcon className="absolute inset-x-0 bottom-0 mx-auto h-4 w-4 opacity-80" />
       </SelectPrimitive.ScrollDownButton>
       <SelectPrimitive.Arrow>owo</SelectPrimitive.Arrow>
     </SelectPrimitive.Content>

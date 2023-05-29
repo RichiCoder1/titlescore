@@ -1,15 +1,17 @@
 import { useUser } from "@clerk/clerk-react";
 import { ChevronLeftIcon, ClipboardEditIcon, LockIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { Link } from "react-router-dom";
-import { ScoreEditor } from "~/components/score/ScoreEditor";
+import { PuffLoader } from "react-spinners";
 import { Button } from "~/components/ui/Button";
 import { Separator } from "~/components/ui/Separator";
 import { Skeleton } from "~/components/ui/Skeleton";
 import { Criteria } from "~/shared/schemas/criteria";
 import { cn } from "~/utils/styles";
 import { trpc } from "~/utils/trpc";
+
+const ScoreEditor = lazy(() => import("~/components/score/ScoreEditor"));
 
 export function ContestantPage() {
   const { contestId, contestantId } = useParams();
@@ -44,8 +46,8 @@ export function ContestantPage() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="w-[30rem] max-w-full h-10" />
-        <Skeleton className="w-full h-8" />
+        <Skeleton className="h-10 w-[30rem] max-w-full" />
+        <Skeleton className="h-8 w-full" />
       </div>
     );
   }
@@ -63,10 +65,10 @@ export function ContestantPage() {
   return (
     <>
       <div className="space-y-2">
-        <div className="flex flow-row items-center">
-          <Button variant="ghost" asChild className="px-4 mr-2">
+        <div className="flex flex-row items-center">
+          <Button variant="ghost" asChild className="mr-2 px-4">
             <Link to={`/app/${contestId}/`}>
-              <ChevronLeftIcon className="w-8 h-8" />
+              <ChevronLeftIcon className="h-8 w-8" />
               <span className="sr-only">Go back</span>
             </Link>
           </Button>
@@ -82,10 +84,10 @@ export function ContestantPage() {
           <div className="text-lg">Available Categories</div>
           <ul className="">
             {criteriaQuery.data?.map((criteria) => (
-              <li className="list-none mt-4" key={criteria.id}>
+              <li className="mt-4 list-none" key={criteria.id}>
                 <Button
                   className={cn(
-                    "w-full dark:text-white text-semibold inline-flex justify-between",
+                    "inline-flex w-full justify-between font-semibold dark:text-white",
                     criteria.id === selectedCriteria?.id && "bg-muted"
                   )}
                   variant="link"
@@ -98,13 +100,13 @@ export function ContestantPage() {
                         .map((score) => (
                           <div
                             key={score.criteriaId}
-                            className="ml-2 text-sm font-light text-slate-400 flex items-center"
+                            className="ml-2 flex items-center text-sm font-light text-slate-400"
                           >
                             {score.score ? (
                               score.submittedAt ? (
-                                <LockIcon className="h-4 w-4 mr-1 text-slate-500" />
+                                <LockIcon className="mr-1 h-4 w-4 text-slate-500" />
                               ) : (
-                                <ClipboardEditIcon className="h-4 w-4 mr-1 text-slate-500" />
+                                <ClipboardEditIcon className="mr-1 h-4 w-4 text-slate-500" />
                               )
                             ) : null}
                             <span>{score.score}</span>
@@ -119,16 +121,22 @@ export function ContestantPage() {
           </ul>
         </div>
         <div className="flex-1">
-          {selectedCriteria ? (
-            <ScoreEditor
-              contestId={contestId}
-              contestantId={contestantId}
-              judgeId={user!.id}
-              criteria={selectedCriteria}
-            />
-          ) : (
-            <p>Select a category.</p>
-          )}
+          <Suspense
+            fallback={
+              <PuffLoader className="my-4" color="hsl(var(--primary))" />
+            }
+          >
+            {selectedCriteria ? (
+              <ScoreEditor
+                contestId={contestId}
+                contestantId={contestantId}
+                judgeId={user!.id}
+                criteria={selectedCriteria}
+              />
+            ) : (
+              <p>Select a category.</p>
+            )}
+          </Suspense>
         </div>
       </div>
     </>

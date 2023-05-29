@@ -20,7 +20,6 @@ import {
 } from "../ui/Form";
 import { trpc } from "~/utils/trpc";
 import { toast } from "react-hot-toast/headless";
-import { useNavigate } from "react-router";
 import { Member, updateMemberSchema } from "~/shared/schemas/members";
 import {
   Select,
@@ -50,6 +49,7 @@ export function UpdateMemberDialog({
     resolver: zodResolver(formSchema),
     defaultValues: {
       ...member,
+      displayName: member.displayName ?? undefined,
     },
   });
   const { reset } = form;
@@ -58,12 +58,12 @@ export function UpdateMemberDialog({
       onOpenChange?.(open);
       reset({
         ...member,
+        displayName: member.displayName ?? undefined,
       });
     },
-    [onOpenChange, reset]
+    [member, onOpenChange, reset]
   );
   const formId = useId();
-  const navigate = useNavigate();
   const utils = trpc.useContext();
 
   const { mutateAsync, isLoading } = trpc.members.update.useMutation({
@@ -104,7 +104,7 @@ export function UpdateMemberDialog({
       await mutateAsync(values);
       onOpenChange?.(false);
     },
-    [formId, onOpenChange, navigate]
+    [mutateAsync, onOpenChange]
   );
 
   return (

@@ -8,7 +8,6 @@ import {
   DropdownMenuTrigger,
 } from "../ui/DropdownMenu";
 import { MoreVerticalIcon } from "lucide-react";
-import { format } from "date-fns";
 import { trpc } from "~/utils/trpc";
 import { toast } from "react-hot-toast/headless";
 
@@ -42,7 +41,7 @@ export function ContestTable({ contests }: ContestTableProps) {
                   {contest.name}
                 </NavLink>
               </p>
-              <p className="mt-1 flex text-xs leading-5 text-gray-500 max-w-fit">
+              <p className="mt-1 flex max-w-fit text-xs leading-5 text-gray-500">
                 <span className="relative truncate">
                   {contest.startsAt} - {contest.endsAt}
                 </span>
@@ -50,7 +49,7 @@ export function ContestTable({ contests }: ContestTableProps) {
             </div>
           </div>
           <div className="flex flex-none items-center gap-x-4">
-            <Button variant="link" className="bg-prim px-4 py-2 text-base">
+            <Button variant="link" className="px-4 py-2 text-base">
               <NavLink to={`/app/${contest.id}`}>
                 View contest<span className="sr-only">, {contest.name}</span>
               </NavLink>

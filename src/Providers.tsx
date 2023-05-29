@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 import { trpc } from "./utils/trpc";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
