@@ -6,6 +6,7 @@ import {
   SignedOut,
   SignInButton,
   useAuth,
+  useClerk,
   UserButton,
 } from "@clerk/clerk-react";
 import { cn } from "~/utils/styles";
@@ -18,6 +19,7 @@ import { trpc } from "~/utils/trpc";
 type Link = { name: string; to: string };
 
 export default function Navbar() {
+  const clerk = useClerk();
   const { isSignedIn } = useAuth();
   const { state } = useNavigation();
   const isQueryLoading = useIsFetching();
@@ -77,9 +79,9 @@ export default function Navbar() {
                 </div>
               </div>
               <div className="flex-1">
-                <div className="mr-6 flex items-center justify-end md:ml-6 md:mr-0">
+                <div className="mr-6 flex items-center justify-end space-x-4 md:ml-6 md:mr-0">
                   <Transition
-                    show={isLoading}
+                    show={isLoading || !clerk?.loaded}
                     enter="transition-opacity duration-150"
                     enterFrom="opacity-0"
                     enterTo="opacity-100"
@@ -88,7 +90,9 @@ export default function Navbar() {
                     leaveTo="opacity-0"
                   >
                     <ScaleLoader
-                      className="mr-4"
+                      className="h-[24px]"
+                      width={4}
+                      height={22}
                       loading={true}
                       color="hsl(var(--primary))"
                     />

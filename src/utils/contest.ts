@@ -1,19 +1,7 @@
-import { useParams } from "react-router";
-import { trpc } from "./trpc";
 import { Contest } from "~/shared/schemas/contests";
 import { formatRelative, isWithinInterval } from "date-fns/esm";
 import { toDate } from "date-fns-tz";
-import { format } from "date-fns";
-
-export function useContest() {
-  const { contestId } = useParams();
-  if (!contestId) {
-    throw new Error(
-      "No contestId provided. Make sure you're using this hook in a route that has a contestId param"
-    );
-  }
-  return trpc.contest.get.useQuery({ id: contestId });
-}
+import { format } from "date-fns/esm";
 
 export function useContestInterval({
   contest,

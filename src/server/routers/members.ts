@@ -54,18 +54,29 @@ export const membersRouter = router({
       verifyLink.searchParams.set("token", token.token);
       verifyLink.searchParams.set("redirectTo", `/app/${input.contestId}`);
 
-      await addContestMembers(authClient, input.contestId, [
-        {
-          userId,
-          relation: input.role,
-        },
-      ]);
+      const { writtenAt } = await addContestMembers(
+        authClient,
+        input.contestId,
+        [
+          {
+            userId,
+            relation: input.role,
+          },
+        ]
+      );
 
       await db.insert(contestMembers).values({
         userId,
         contestId: input.contestId,
         displayName: input.displayName ?? targetUser.firstName ?? input.email,
       });
+
+      await db
+        .update(contests)
+        .set({
+          zed: writtenAt.token,
+        })
+        .where(eq(contests.id, input.contestId));
 
       await sendgrid.post("v3/mail/send", {
         json: {
@@ -143,16 +154,22 @@ export const membersRouter = router({
     .input(updateMemberSchema)
     .meta({ check: { permission: "manage" } })
     .mutation(async ({ input, ctx }) => {
-      const { authClient, authorize } = ctx;
+      const { authClient, authorize, db } = ctx;
 
       await authorize(input.contestId);
 
-      await updateMemberRole(
+      const { writtenAt } = await updateMemberRole(
         authClient,
         input.contestId,
         input.userId,
         input.role
       );
+      await db
+        .update(contests)
+        .set({
+          zed: writtenAt.token,
+        })
+        .where(eq(contests.id, input.contestId));
     }),
   listByContestId: protectedProcedure
     .input(z.object({ contestId: z.string(), role: z.string().optional() }))
@@ -194,7 +211,7 @@ export const membersRouter = router({
     .input(z.object({ contestId: z.string(), userId: z.string() }))
     .meta({ check: { permission: "manage" } })
     .mutation(async ({ input, ctx }) => {
-      const { authClient, authorize } = ctx;
+      const { authClient, authorize, db } = ctx;
       const { userId } = input;
 
       if (userId === ctx.user?.id) {
@@ -208,8 +225,17 @@ export const membersRouter = router({
 
       const role = await getRelation(authClient, input.userId, input.contestId);
 
-      await removeContestMembers(authClient, input.contestId, [
-        { userId: input.userId, relation: role! },
-      ]);
+      const { writtenAt } = await removeContestMembers(
+        authClient,
+        input.contestId,
+        [{ userId: input.userId, relation: role! }]
+      );
+
+      await db
+        .update(contests)
+        .set({
+          zed: writtenAt.token,
+        })
+        .where(eq(contests.id, input.contestId));
     }),
 });

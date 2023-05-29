@@ -3,10 +3,11 @@ import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "../trpc";
 import {
   addContestMembers,
+  checkPermission,
   getContestIdsByUser,
   getRelation,
 } from "../helpers/authz";
-import { contests } from "../schema";
+import { contestMembers, contests } from "../schema";
 import { eq, inArray } from "drizzle-orm";
 import { insertContestSchema } from "~/shared/schemas/contests";
 import { ulid } from "../helpers/ulid";
@@ -102,17 +103,23 @@ export const contestRouter = router({
     }
     return result;
   }),
-  getRole: protectedProcedure
+  me: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const {
         authClient,
         user: { id },
+        db,
       } = ctx;
+
+      const user = await db.query.contestMembers.findFirst({
+        where: eq(contestMembers.userId, id),
+      });
 
       return {
         relation: await getRelation(authClient, id, input.id),
         userId: id,
+        displayName: user?.displayName,
       };
     }),
   getRelations: protectedProcedure
@@ -124,6 +131,35 @@ export const contestRouter = router({
       } = ctx;
 
       return getRelation(authClient, id, input.id);
+    }),
+  check: protectedProcedure
+    .input(
+      z.object({
+        contestId: z.string(),
+        permission: z.string(),
+      })
+    )
+    .meta({
+      check: {
+        permission: "view",
+      },
+    })
+    .query(async ({ ctx, input }) => {
+      const {
+        authClient,
+        user: { id },
+        authorize,
+      } = ctx;
+
+      const zedToken = await authorize(input.contestId);
+
+      return checkPermission(authClient, {
+        ...input,
+        resourceId: input.contestId,
+        resourceType: "contest",
+        userId: id,
+        zedToken,
+      });
     }),
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))

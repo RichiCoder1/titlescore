@@ -11,6 +11,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
+import { ColorModeContext } from "./darkMode";
 
 if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key");
@@ -25,6 +26,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 10,
       cacheTime: 1000 * 60 * 60 * 24,
+      suspense: true,
     },
   },
 });
@@ -64,9 +66,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
       afterSignInUrl="/app"
       afterSignUpUrl="/app"
     >
-      <HelmetProvider>
-        <ClientProvider>{children}</ClientProvider>
-      </HelmetProvider>
+      <ColorModeContext.Provider value={darkMode ? "dark" : "light"}>
+        <HelmetProvider>
+          <ClientProvider>{children}</ClientProvider>
+        </HelmetProvider>
+      </ColorModeContext.Provider>
     </ClerkProvider>
   );
 }

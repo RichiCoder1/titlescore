@@ -1,10 +1,12 @@
 import { inferAsyncReturnType } from "@trpc/server";
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
+import { ApiContext } from "functions/api/_middleware";
 import ky from "ky";
 import type { KyInstance } from "node_modules/ky/distribution/types/ky";
 
 export const createContext =
-  (cfCtx: CfCtx) => async (ctx: FetchCreateContextFnOptions) => {
+  (cfCtx: EventContext<CfEnv, any, ApiContext>) =>
+  async (ctx: FetchCreateContextFnOptions) => {
     const host = ctx.req.headers.get("host")!;
     const baseUrl =
       host.includes("localhost") || host.includes("127.0.0.1")

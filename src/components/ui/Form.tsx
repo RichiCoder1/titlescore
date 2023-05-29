@@ -4,6 +4,7 @@ import { Slot } from "@radix-ui/react-slot";
 import {
   Controller,
   ControllerProps,
+  ControllerRenderProps,
   FieldPath,
   FieldValues,
   FormProvider,
@@ -165,9 +166,23 @@ const FormMessage = React.forwardRef<
 });
 FormMessage.displayName = "FormMessage";
 
+function valueAsNumberish<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+>(field: ControllerRenderProps<TFieldValues, TName>) {
+  return {
+    ...field,
+    value: field.value ?? "",
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+      field.onChange(e.target.value == "" ? null : Number(e.target.value));
+    },
+  };
+}
+
 export {
   // eslint-disable-next-line react-refresh/only-export-components
   useFormField,
+  valueAsNumberish,
   Form,
   FormItem,
   FormLabel,

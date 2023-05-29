@@ -27,12 +27,8 @@ interface CfEnv {
   DATABASE_URL: string;
 }
 
-interface CfData
-  extends Record<string, unknown>,
-    Awaited<
-      ReturnType<
-        typeof import("./functions/api/_middleware").generateContextData
-      >
-    > {}
-
-type CfCtx<T extends string = any> = EventContext<CfEnv, T, CfData>;
+type Database = import("drizzle-orm").Simplify<
+  import("drizzle-orm/neon-serverless").NeonDatabase<
+    typeof import("~/server/schema")
+  >
+>;

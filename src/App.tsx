@@ -6,7 +6,7 @@ function App() {
   return (
     <Providers>
       <Outlet />
-      <Notifications/>
+      <Notifications />
     </Providers>
   );
 }

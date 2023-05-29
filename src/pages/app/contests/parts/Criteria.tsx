@@ -31,7 +31,7 @@ import { DialogTrigger } from "~/components/ui/Dialog";
 import { UpdateCriteriaDialog } from "~/components/criteria/UpdateCriteriaDialog";
 import toast from "react-hot-toast/headless";
 import { ItemActions } from "~/components/ui/tableParts/ItemActions";
-import { useRole } from "~/utils/auth";
+import { useContestMember } from "~/utils/auth";
 import { Link } from "react-router-dom";
 
 const columns: ColumnDef<Criteria>[] = [
@@ -50,7 +50,7 @@ const columns: ColumnDef<Criteria>[] = [
 ];
 
 export function Criteria({ contestId }: { contestId: string }) {
-  const { canManage } = useRole({ contestId });
+  const { canManage } = useContestMember({ contestId });
 
   const utils = trpc.useContext();
   const { data, isLoading } = trpc.criteria.listByContestId.useQuery({

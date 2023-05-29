@@ -9,10 +9,12 @@ import { IndexPage } from "./pages/app";
 import { ContestsIndexPage } from "./pages/app/contests";
 import { ContestantPage } from "./pages/app/contests/contestant";
 import { ContestFormPrint } from "./pages/app/contests/print";
+import { RouterErrorBoundary } from "./components/error";
 
 export const router = createBrowserRouter([
   {
     element: <App />,
+    errorElement: <RouterErrorBoundary />,
     children: [
       {
         element: <DefaultLayout />,
@@ -20,6 +22,23 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <Home />,
+          },
+          {
+            path: "/auth?/login",
+            element: (
+              <>
+                <SignedIn>
+                  <Navigate to="/" />
+                </SignedIn>
+                <SignedOut>
+                  <RedirectToSignIn />
+                </SignedOut>
+              </>
+            ),
+          },
+          {
+            path: "/auth?/verify",
+            element: <VerifyPage />,
           },
           {
             path: "/app",
@@ -44,28 +63,6 @@ export const router = createBrowserRouter([
       {
         path: "/app/:contestId/print",
         element: <ContestFormPrint />,
-      },
-      {
-        element: <DefaultLayout />,
-        children: [
-          {
-            path: "/auth?/login",
-            element: (
-              <>
-                <SignedIn>
-                  <Navigate to="/" />
-                </SignedIn>
-                <SignedOut>
-                  <RedirectToSignIn />
-                </SignedOut>
-              </>
-            ),
-          },
-          {
-            path: "/auth?/verify",
-            element: <VerifyPage />,
-          },
-        ],
       },
     ],
   },

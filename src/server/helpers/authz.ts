@@ -96,6 +96,7 @@ export const checkPermission = async (
     resourceType: string;
     userId: string;
     permission: string;
+    zedToken?: string | null;
   }
 ) => {
   const request = {
@@ -111,9 +112,15 @@ export const checkPermission = async (
     },
     permission: opts.permission,
     // TODO: Us Tokens?
-    consistency: {
-      fullyConsistent: true,
-    },
+    consistency: opts.zedToken
+      ? {
+          atLeastAsFresh: {
+            token: opts.zedToken,
+          },
+        }
+      : {
+          fullyConsistent: true,
+        },
   };
 
   const response = await client.post("v1/permissions/check", {
@@ -195,7 +202,7 @@ export const updateMemberRole = async (
       relation: undefined as any,
     },
   ]);
-  await addContestMembers(client, contestId, [
+  return await addContestMembers(client, contestId, [
     {
       userId,
       relation,

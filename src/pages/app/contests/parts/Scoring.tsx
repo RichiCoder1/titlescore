@@ -15,11 +15,12 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "~/components/ui/Tooltip";
-import { useContest, useContestInterval } from "~/utils/contest";
+import { useContestInterval } from "~/utils/contest";
 import { trpc } from "~/utils/trpc";
+import { useContest } from "../helpers";
 
 export const Scoring = ({ contestId }: { contestId: string }) => {
-  const { data: contest, isLoading: isLoadingContest } = useContest();
+  const contest = useContest();
   const { data: summary, isLoading: isLoadingSummary } =
     trpc.scores.summary.useQuery({
       contestId,
@@ -41,7 +42,7 @@ export const Scoring = ({ contestId }: { contestId: string }) => {
     console.log({ scores: calc.data });
   }, [calc.data]);
 
-  const isLoading = isLoadingContest || isLoadingSummary;
+  const isLoading = isLoadingSummary;
   const contestDates = useContestInterval({ contest });
   const hasQuorum = (summary?.judges?.length ?? 0) >= 5;
 

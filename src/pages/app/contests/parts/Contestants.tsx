@@ -32,11 +32,11 @@ import { DialogTrigger } from "~/components/ui/Dialog";
 import { UpdateContestantsDialog } from "~/components/contestants/UpdateContestantDialog";
 import toast from "react-hot-toast/headless";
 import { ItemActions } from "~/components/ui/tableParts/ItemActions";
-import { useRole } from "~/utils/auth";
+import { useContestMember } from "~/utils/auth";
 import { Link } from "react-router-dom";
 
 export function Contestants({ contestId }: { contestId: string }) {
-  const { role, canManage } = useRole({ contestId });
+  const { role, canManage } = useContestMember({ contestId });
 
   const utils = trpc.useContext();
   const { data, isLoading } = trpc.contestants.listByContestId.useQuery({

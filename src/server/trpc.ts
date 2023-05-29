@@ -84,8 +84,8 @@ export const protectedProcedure = t.procedure.use((opts) => {
     });
   }
 
-  let authorize: (id: string) => Promise<void | never> = () =>
-    Promise.resolve();
+  let authorize: (id: string) => Promise<string | never> = () =>
+    Promise.resolve("");
 
   if (meta?.check) {
     const { authClient, db } = ctx;
@@ -96,8 +96,9 @@ export const protectedProcedure = t.procedure.use((opts) => {
     authorize = async (id: string) => {
       try {
         // If this is a contest procedure, check the contest first.
+        let zedToken: string | null = null;
         if (!resourceType || resourceType === "contest") {
-          await checkContest(id, db);
+          zedToken = await checkContest(id, db);
         }
 
         const result = await checkPermission(authClient, {
@@ -105,6 +106,7 @@ export const protectedProcedure = t.procedure.use((opts) => {
           resourceType: resourceType ?? "contest",
           permission,
           userId,
+          zedToken,
         });
 
         if (result.permissionship !== true) {
@@ -113,6 +115,7 @@ export const protectedProcedure = t.procedure.use((opts) => {
             message: "You do not have permission to perform this action.",
           });
         }
+        return zedToken ?? result.checkedAt.token;
       } catch (e) {
         console.error("trpc.authorize", { e });
         if (e instanceof TRPCError) throw e;

@@ -27,6 +27,7 @@ export const criteriaRouter = router({
           name: input.name,
           description: input.description ?? "",
           weight: input.weight,
+          dueAt: input.dueAt,
         })
         .returning();
 
@@ -48,6 +49,7 @@ export const criteriaRouter = router({
           name: input.name,
           description: input.description ?? "",
           weight: input.weight,
+          dueAt: input.dueAt,
         })
         .where(eq(criteria.id, input.id!))
         .returning();

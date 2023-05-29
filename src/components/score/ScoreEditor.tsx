@@ -10,6 +10,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  valueAsNumberish,
 } from "../ui/Form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -230,13 +231,7 @@ export function ScoreEditor(props: ScoreEditorProps) {
                     min={0}
                     max={criteria.weight}
                     pattern="\d+"
-                    {...field}
-                    value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value == "" ? null : e.target.value
-                      )
-                    }
+                    {...valueAsNumberish(field)}
                   />{" "}
                   <span className="ml-2 text-sm text-slate-500">
                     / {criteria.weight}

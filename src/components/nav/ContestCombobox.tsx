@@ -31,14 +31,19 @@ export function ContestCombobox() {
   const [showCreateContest, setShowCreateContest] = React.useState(false);
   const navigate = useNavigate();
 
-  const { data, isLoading } = trpc.contest.list.useQuery();
+  const { data, isLoading } = trpc.contest.list.useQuery(undefined, {
+    suspense: false,
+  });
 
   useEffect(() => {
     setValue(contestId ?? "");
-  }, [contestId, setValue])
+  }, [contestId, setValue]);
 
   return (
-    <CreateContestDialog open={showCreateContest} onOpenChange={setShowCreateContest}>
+    <CreateContestDialog
+      open={showCreateContest}
+      onOpenChange={setShowCreateContest}
+    >
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -71,7 +76,7 @@ export function ContestCombobox() {
                         return;
                       }
                       setValue(value);
-                      navigate(`/app/${contest.id}`)
+                      navigate(`/app/${contest.id}`);
                     }}
                   >
                     <Check

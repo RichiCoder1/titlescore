@@ -21,10 +21,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  valueAsNumberish,
 } from "../ui/Form";
 import { trpc } from "~/utils/trpc";
 import { toast } from "react-hot-toast/headless";
 import { Criteria, updateCriteriaSchema } from "~/shared/schemas/criteria";
+import { useColorMode } from "~/darkMode";
+import { toDate } from "date-fns-tz";
+import { useContest } from "~/pages/app/contests/helpers";
+import { format } from "date-fns/esm";
 
 export type UpdateCriteriaDialogProps = PropsWithChildren<{
   open: boolean;
@@ -32,7 +37,15 @@ export type UpdateCriteriaDialogProps = PropsWithChildren<{
   criteria: Criteria;
 }>;
 
-const formSchema = updateCriteriaSchema;
+const formSchema = updateCriteriaSchema
+  .omit({
+    dueAt: true,
+  })
+  .merge(
+    z.object({
+      dateAtDate: z.string().nullish(),
+    })
+  );
 
 export function UpdateCriteriaDialog({
   children,
@@ -50,14 +63,19 @@ export function UpdateCriteriaDialog({
   const onShowDialog = useCallback(
     (open: boolean) => {
       onOpenChange?.(open);
+      console.log({ criteria });
       reset({
         ...criteria,
+        dateAtDate: criteria.dueAt
+          ? format(criteria.dueAt, "yyyy-MM-dd'T'HH:mm")
+          : null,
       });
     },
     [criteria, onOpenChange, reset]
   );
   const formId = useId();
   const utils = trpc.useContext();
+  const contest = useContest();
 
   const { mutateAsync, isLoading } = trpc.criteria.update.useMutation({
     onMutate: async (criteria) => {
@@ -101,9 +119,18 @@ export function UpdateCriteriaDialog({
     },
   });
 
+  const colorMode = useColorMode();
+
   const onSubmit = useCallback(
     async (values: z.infer<typeof formSchema>) => {
-      await mutateAsync(values);
+      await mutateAsync({
+        ...values,
+        dueAt: values.dateAtDate
+          ? toDate(values.dateAtDate, {
+              timeZone: contest.timezone,
+            })
+          : null,
+      });
       onOpenChange?.(false);
     },
     [mutateAsync, onOpenChange]
@@ -115,8 +142,8 @@ export function UpdateCriteriaDialog({
       <Form {...form}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Criteria</DialogTitle>
-            <DialogDescription>Create a new criteria.</DialogDescription>
+            <DialogTitle>Update Criteria</DialogTitle>
+            <DialogDescription>Update an existing criteria.</DialogDescription>
           </DialogHeader>
           <form
             id={formId}
@@ -170,16 +197,37 @@ export function UpdateCriteriaDialog({
                 <FormItem>
                   <FormLabel>Weight</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      type="number"
-                      value={field.value ?? undefined}
-                      min={0}
-                    />
+                    <Input type="number" min={0} {...valueAsNumberish(field)} />
                   </FormControl>
                   <FormDescription>
                     The relative weight of this criteria. Judges may assign a
                     score from zero up to this max.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="dateAtDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Due By</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="datetime-local"
+                      value={field.value ?? ""}
+                      style={{
+                        colorScheme: colorMode,
+                      }}
+                      min={`${contest.startsAt}T00:00:00`}
+                      max={`${contest.endsAt}T23:59:59`}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    The time by which this criteria should be submitted. Mostly
+                    an advisory field.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

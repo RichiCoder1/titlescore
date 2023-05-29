@@ -4,9 +4,10 @@ import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool } from "@neondatabase/serverless";
 import * as schema from "~/server/schema";
 import ky from "ky";
+import { inferAsyncReturnType } from "@trpc/server";
 
 type ClerkClient = ReturnType<typeof createClerkClient>;
-type JwtPayload = Awaited<ReturnType<ClerkClient["verifyToken"]>>;
+type JwtPayload = inferAsyncReturnType<ClerkClient["verifyToken"]>;
 
 export const generateContextData = (
   context: EventContext<CfEnv, any, any>,
@@ -39,7 +40,11 @@ export const generateContextData = (
   };
 };
 
-export const onRequest: PagesFunction<CfEnv, any, CfData> = async (context) => {
+export type ApiContext = inferAsyncReturnType<typeof generateContextData>;
+
+export const onRequest: PagesFunction<CfEnv, any, ApiContext> = async (
+  context
+) => {
   if (context.request.method === "OPTIONS") {
     return context.next();
   }

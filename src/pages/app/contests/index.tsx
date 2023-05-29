@@ -4,8 +4,10 @@ import { Criteria } from "./parts/Criteria";
 import { Separator } from "~/components/ui/Separator";
 import { Contestants } from "./parts/Contestants";
 import { Members } from "./parts/Members";
-import { useRole } from "~/utils/auth";
+import { useContestMember } from "~/utils/auth";
 import { Scoring } from "./parts/Scoring";
+import { ContestProvider } from "./helpers";
+import { useContestInterval } from "~/utils/contest";
 
 export function ContestsIndexPage() {
   const { contestId } = useParams();
@@ -13,7 +15,7 @@ export function ContestsIndexPage() {
     throw new Error("Missing contestId.");
   }
 
-  const { canManage } = useRole({ contestId });
+  const { canManage } = useContestMember({ contestId });
 
   const {
     data: contest,
@@ -21,6 +23,11 @@ export function ContestsIndexPage() {
     error,
   } = trpc.contest.get.useQuery({
     id: contestId!,
+  });
+
+  const { startPretty, endPretty } = useContestInterval({
+    contest,
+    relative: false,
   });
 
   if (isLoading) {
@@ -32,11 +39,11 @@ export function ContestsIndexPage() {
   }
 
   return (
-    <div>
+    <ContestProvider value={contest}>
       <h1 className="text-xl font-semibold">{contest.name}</h1>
       <p className="mt-1 max-w-fit text-xs leading-6 text-gray-500">
         <span className="relative truncate">
-          {contest.startsAt} - {contest.endsAt}
+          {startPretty} - {endPretty}
         </span>
       </p>
       <Separator className="my-4" />
@@ -46,6 +53,6 @@ export function ContestsIndexPage() {
         <Criteria contestId={contestId} />
         {canManage ? <Members contestId={contestId} /> : null}
       </div>
-    </div>
+    </ContestProvider>
   );
 }

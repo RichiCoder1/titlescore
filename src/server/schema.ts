@@ -16,6 +16,7 @@ export const contests = pgTable("contests", {
   startsAt: date("starts_at").notNull(),
   endsAt: date("ends_at").notNull(),
   timezone: text("timezone").notNull().default("UTC"),
+  zed: text("zed"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -51,6 +52,7 @@ export const criteria = pgTable("criteria", {
   name: text("name").notNull(),
   description: text("description").notNull(),
   weight: integer("weight").notNull(),
+  dueAt: timestamp("due_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

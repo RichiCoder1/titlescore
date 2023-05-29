@@ -14,4 +14,5 @@ export async function checkContest(contestId: string, db: Context["db"]) {
       message: "Contest not found",
     });
   }
+  return contest.zed;
 }
